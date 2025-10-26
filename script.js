@@ -1,47 +1,70 @@
 let currency = '₹';
+let currentMonth = '';
+let currentYear = '';
 
-// Load saved data from browser storage or use defaults
-const savedData = localStorage.getItem('budgetData');
-const data = savedData ? JSON.parse(savedData) : {
-  income: [
-    { name: 'Realtor income', planned: 10600, actual: 10600 }
-  ],
-  bills: [
-    { name: 'Apartment', planned: 2300, actual: 2300, checked: true },
-    { name: 'Internet', planned: 85, actual: 85, checked: true },
-    { name: 'Electricity', planned: 190, actual: 190, checked: true },
-    { name: 'Water', planned: 50, actual: 50, checked: true },
-    { name: 'Netflix', planned: 18.5, actual: 18.5, checked: true },
-    { name: 'Gym membership', planned: 45, actual: 45, checked: true },
-    { name: 'Car insurance', planned: 140, actual: 140, checked: true }
-  ],
-  expenses: [
-    { name: 'Scooty', planned: 0, actual: 0, checked: false },
-    { name: 'Fuel', planned: 0, actual: 0, checked: false },
-    { name: 'Rent', planned: 0, actual: 0, checked: false },
-    { name: 'Electricity & Maintenance', planned: 0, actual: 0, checked: false },
-    { name: 'Groceries and Dmart', planned: 0, actual: 0, checked: false },
-    { name: 'Entertainment (Movies)', planned: 0, actual: 0, checked: false },
-    { name: 'Miscellaneous', planned: 0, actual: 0, checked: false },
-    { name: 'Swiggy/Zomato', planned: 0, actual: 0, checked: false },
-    { name: 'Personal care', planned: 0, actual: 0, checked: false },
-    { name: 'Breakfast', planned: 0, actual: 0, checked: false },
-    { name: 'Wifi', planned: 0, actual: 0, checked: false },
-    { name: 'Mobile Recharge', planned: 0, actual: 0, checked: false },
-    { name: 'Netflix, Amazon', planned: 0, actual: 0, checked: false }
-  ],
-  savings: [
-    { name: 'Retirement account', planned: 600, actual: 600, checked: true },
-    { name: 'Emergencies', planned: 800, actual: 800, checked: true },
-    { name: 'Vacation to the US', planned: 350, actual: 350, checked: true },
-    { name: 'Savings account', planned: 2820, actual: 2820, checked: true }
-  ],
-  debt: [
-    { name: 'Car lease', planned: 420, actual: 420, checked: true },
-    { name: 'Credit card', planned: 315, actual: 315, checked: true },
-    { name: 'Business loan', planned: 120, actual: 120, checked: true }
-  ]
-};
+// Get current month and year from date picker
+function getCurrentMonthKey() {
+  const startDate = document.getElementById('startDate').value;
+  if (startDate) {
+    const date = new Date(startDate);
+    currentMonth = date.getMonth();
+    currentYear = date.getFullYear();
+    return `budget_${currentYear}_${currentMonth}`;
+  }
+  return 'budget_current';
+}
+
+// Load data for current month
+function loadMonthData() {
+  const monthKey = getCurrentMonthKey();
+  const savedData = localStorage.getItem(monthKey);
+  return savedData ? JSON.parse(savedData) : getDefaultData();
+}
+
+function getDefaultData() {
+  return {
+    income: [
+      { name: 'Realtor income', planned: 10600, actual: 10600 }
+    ],
+    bills: [
+      { name: 'Apartment', planned: 2300, actual: 2300, checked: true },
+      { name: 'Internet', planned: 85, actual: 85, checked: true },
+      { name: 'Electricity', planned: 190, actual: 190, checked: true },
+      { name: 'Water', planned: 50, actual: 50, checked: true },
+      { name: 'Netflix', planned: 18.5, actual: 18.5, checked: true },
+      { name: 'Gym membership', planned: 45, actual: 45, checked: true },
+      { name: 'Car insurance', planned: 140, actual: 140, checked: true }
+    ],
+    expenses: [
+      { name: 'Scooty', planned: 0, actual: 0, checked: false },
+      { name: 'Fuel', planned: 0, actual: 0, checked: false },
+      { name: 'Rent', planned: 0, actual: 0, checked: false },
+      { name: 'Electricity & Maintenance', planned: 0, actual: 0, checked: false },
+      { name: 'Groceries and Dmart', planned: 0, actual: 0, checked: false },
+      { name: 'Entertainment (Movies)', planned: 0, actual: 0, checked: false },
+      { name: 'Miscellaneous', planned: 0, actual: 0, checked: false },
+      { name: 'Swiggy/Zomato', planned: 0, actual: 0, checked: false },
+      { name: 'Personal care', planned: 0, actual: 0, checked: false },
+      { name: 'Breakfast', planned: 0, actual: 0, checked: false },
+      { name: 'Wifi', planned: 0, actual: 0, checked: false },
+      { name: 'Mobile Recharge', planned: 0, actual: 0, checked: false },
+      { name: 'Netflix, Amazon', planned: 0, actual: 0, checked: false }
+    ],
+    savings: [
+      { name: 'Retirement account', planned: 600, actual: 600, checked: true },
+      { name: 'Emergencies', planned: 800, actual: 800, checked: true },
+      { name: 'Vacation to the US', planned: 350, actual: 350, checked: true },
+      { name: 'Savings account', planned: 2820, actual: 2820, checked: true }
+    ],
+    debt: [
+      { name: 'Car lease', planned: 420, actual: 420, checked: true },
+      { name: 'Credit card', planned: 315, actual: 315, checked: true },
+      { name: 'Business loan', planned: 120, actual: 120, checked: true }
+    ]
+  };
+}
+
+const data = loadMonthData();
 
 // Load saved currency and dates
 const savedCurrency = localStorage.getItem('budgetCurrency');
@@ -58,12 +81,20 @@ let filterState = {
   debt: 'all'
 };
 
-// Save data to browser storage
+// Save data to browser storage for current month
 function saveData() {
-  localStorage.setItem('budgetData', JSON.stringify(data));
+  const monthKey = getCurrentMonthKey();
+  localStorage.setItem(monthKey, JSON.stringify(data));
   localStorage.setItem('budgetCurrency', currency);
   localStorage.setItem('budgetStartDate', document.getElementById('startDate').value);
   localStorage.setItem('budgetEndDate', document.getElementById('endDate').value);
+  
+  // Add to saved months list
+  const savedMonths = getSavedMonths();
+  if (!savedMonths.includes(monthKey)) {
+    savedMonths.push(monthKey);
+    localStorage.setItem('savedMonthsList', JSON.stringify(savedMonths));
+  }
   
   // Show save confirmation
   const saveIndicator = document.getElementById('saveIndicator');
@@ -75,10 +106,225 @@ function saveData() {
   }
 }
 
+// Get list of all saved months
+function getSavedMonths() {
+  const saved = localStorage.getItem('savedMonthsList');
+  return saved ? JSON.parse(saved) : [];
+}
+
+// View previous months
+function viewPreviousMonths() {
+  const savedMonths = getSavedMonths();
+  
+  if (savedMonths.length === 0) {
+    alert('No saved months yet! Save your current month first.');
+    return;
+  }
+  
+  let html = '<div style="max-height: 500px; overflow-y: auto;">';
+  html += '<h2 style="margin-bottom: 20px;">Saved Monthly Reports</h2>';
+  
+  savedMonths.sort().reverse().forEach(monthKey => {
+    const parts = monthKey.split('_');
+    const year = parts[1];
+    const month = parts[2];
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    const monthName = monthNames[parseInt(month)];
+    
+    const monthData = JSON.parse(localStorage.getItem(monthKey));
+    const totalIncome = monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const totalExpenses = monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const totalBills = monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const totalSavings = monthData.savings.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const totalDebt = monthData.debt.reduce((sum, item) => sum + (item.actual || 0), 0);
+    const balance = totalIncome - totalExpenses - totalBills - totalSavings - totalDebt;
+    
+    html += `
+      <div style="background: #f8f5ff; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+        <h3 style="margin-bottom: 10px;">${monthName} ${year}</h3>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 13px;">
+          <div><strong>Income:</strong> ${currency}${totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div><strong>Expenses:</strong> ${currency}${totalExpenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div><strong>Bills:</strong> ${currency}${totalBills.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div><strong>Savings:</strong> ${currency}${totalSavings.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div><strong>Debt:</strong> ${currency}${totalDebt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          <div><strong>Balance:</strong> <span style="color: ${balance >= 0 ? '#10b981' : '#ef4444'}; font-weight: bold;">${currency}${balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+        </div>
+        <div style="margin-top: 10px;">
+          <button onclick="loadMonth('${monthKey}')" style="background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Load This Month</button>
+          <button onclick="deleteMonth('${monthKey}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Delete</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  
+  showModal('Previous Months', html);
+}
+
+// View yearly summary
+function viewYearlySummary() {
+  const savedMonths = getSavedMonths();
+  
+  if (savedMonths.length === 0) {
+    alert('No saved months yet! Save some months first to see yearly summary.');
+    return;
+  }
+  
+  // Group by year
+  const yearData = {};
+  
+  savedMonths.forEach(monthKey => {
+    const parts = monthKey.split('_');
+    const year = parts[1];
+    
+    if (!yearData[year]) {
+      yearData[year] = {
+        income: 0,
+        expenses: 0,
+        bills: 0,
+        savings: 0,
+        debt: 0,
+        months: []
+      };
+    }
+    
+    const monthData = JSON.parse(localStorage.getItem(monthKey));
+    yearData[year].income += monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0);
+    yearData[year].expenses += monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0);
+    yearData[year].bills += monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0);
+    yearData[year].savings += monthData.savings.reduce((sum, item) => sum + (item.actual || 0), 0);
+    yearData[year].debt += monthData.debt.reduce((sum, item) => sum + (item.actual || 0), 0);
+    yearData[year].months.push(monthKey);
+  });
+  
+  let html = '<div style="max-height: 500px; overflow-y: auto;">';
+  html += '<h2 style="margin-bottom: 20px;">Yearly Summary</h2>';
+  
+  Object.keys(yearData).sort().reverse().forEach(year => {
+    const data = yearData[year];
+    const balance = data.income - data.expenses - data.bills - data.savings - data.debt;
+    
+    html += `
+      <div style="background: #f8f5ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 2px solid #8b5cf6;">
+        <h2 style="margin-bottom: 15px; color: #8b5cf6;">${year} Summary (${data.months.length} months)</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 14px;">
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Income</div>
+            <div style="font-size: 20px; font-weight: bold; color: #10b981;">${currency}${data.income.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Expenses</div>
+            <div style="font-size: 20px; font-weight: bold; color: #ef4444;">${currency}${data.expenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Bills</div>
+            <div style="font-size: 20px; font-weight: bold; color: #f97316;">${currency}${data.bills.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Savings</div>
+            <div style="font-size: 20px; font-weight: bold; color: #3b82f6;">${currency}${data.savings.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Debt</div>
+            <div style="font-size: 20px; font-weight: bold; color: #ec4899;">${currency}${data.debt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+          <div style="background: white; padding: 12px; border-radius: 6px;">
+            <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Net Balance</div>
+            <div style="font-size: 20px; font-weight: bold; color: ${balance >= 0 ? '#10b981' : '#ef4444'};">${currency}${balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  
+  showModal('Yearly Summary', html);
+}
+
+// Load a specific month
+function loadMonth(monthKey) {
+  const parts = monthKey.split('_');
+  const year = parts[1];
+  const month = parts[2];
+  
+  // Update date picker
+  const newDate = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
+  document.getElementById('startDate').value = newDate;
+  
+  // Calculate end date
+  const endDateObj = new Date(year, parseInt(month) + 1, 0);
+  document.getElementById('endDate').value = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-${endDateObj.getDate()}`;
+  
+  // Load data
+  const monthData = JSON.parse(localStorage.getItem(monthKey));
+  Object.assign(data, monthData);
+  
+  // Close modal and update
+  closeModal();
+  updateMonth();
+  updateAll();
+  
+  alert('Month loaded! You can now view and edit this month.');
+}
+
+// Delete a month
+function deleteMonth(monthKey) {
+  if (confirm('Are you sure you want to delete this month? This cannot be undone!')) {
+    localStorage.removeItem(monthKey);
+    
+    // Remove from saved months list
+    const savedMonths = getSavedMonths();
+    const index = savedMonths.indexOf(monthKey);
+    if (index > -1) {
+      savedMonths.splice(index, 1);
+      localStorage.setItem('savedMonthsList', JSON.stringify(savedMonths));
+    }
+    
+    viewPreviousMonths(); // Refresh the view
+  }
+}
+
+// Show modal
+function showModal(title, content) {
+  const modal = document.createElement('div');
+  modal.id = 'customModal';
+  modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+  
+  modal.innerHTML = `
+    <div style="background: white; padding: 30px; border-radius: 12px; max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">${title}</h2>
+        <button onclick="closeModal()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 16px;">✕ Close</button>
+      </div>
+      ${content}
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+// Close modal
+function closeModal() {
+  const modal = document.getElementById('customModal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
 // Clear all saved data
 function clearAllData() {
-  if (confirm('Are you sure you want to clear all saved data? This cannot be undone!')) {
-    localStorage.removeItem('budgetData');
+  if (confirm('Are you sure you want to clear ALL data including all saved months? This cannot be undone!')) {
+    // Clear all budget data
+    const savedMonths = getSavedMonths();
+    savedMonths.forEach(monthKey => {
+      localStorage.removeItem(monthKey);
+    });
+    
+    localStorage.removeItem('savedMonthsList');
     localStorage.removeItem('budgetCurrency');
     localStorage.removeItem('budgetStartDate');
     localStorage.removeItem('budgetEndDate');
@@ -141,6 +387,14 @@ function updateMonth() {
     const monthNames = ["January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"];
     document.getElementById('monthName').textContent = monthNames[date.getMonth()];
+    
+    // Load data for this month if it exists
+    const monthKey = getCurrentMonthKey();
+    const existingData = localStorage.getItem(monthKey);
+    if (existingData) {
+      const monthData = JSON.parse(existingData);
+      Object.assign(data, monthData);
+    }
   }
   saveData();
 }
@@ -300,7 +554,6 @@ function renderTable(category, tableId, hasProgress) {
   }
   
   let html = items.map((item, originalIdx) => {
-    // Find original index
     const idx = data[category].indexOf(item);
     const progress = item.planned > 0 ? ((item.actual / item.planned) * 100).toFixed(2) + '%' : '100.00%';
     const checkbox = hasProgress ? `
@@ -333,7 +586,6 @@ function renderTable(category, tableId, hasProgress) {
   const totalActual = calculateTotal(category, 'actual');
   const totalProgress = totalPlanned > 0 ? ((totalActual / totalPlanned) * 100).toFixed(2) + '%' : '100.00%';
   
-  // Add filter buttons and + button for categories with progress
   let filterButtons = '';
   if (hasProgress) {
     filterButtons = `
@@ -347,7 +599,6 @@ function renderTable(category, tableId, hasProgress) {
       </tr>
     `;
   } else {
-    // For income (no progress column)
     filterButtons = `
       <tr>
         <td colspan="3" style="text-align: center; padding: 10px;">
