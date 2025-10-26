@@ -4,9 +4,9 @@ let currentYear = '';
 
 // Get current month and year from date picker
 function getCurrentMonthKey() {
-  const startDate = document.getElementById('startDate').value;
-  if (startDate) {
-    const date = new Date(startDate);
+  const startDate = document.getElementById('startDate');
+  if (startDate && startDate.value) {
+    const date = new Date(startDate.value);
     currentMonth = date.getMonth();
     currentYear = date.getFullYear();
     return `budget_${currentYear}_${currentMonth}`;
@@ -64,7 +64,7 @@ function getDefaultData() {
   };
 }
 
-const data = loadMonthData();
+let data = getDefaultData();
 
 // Load saved currency and dates
 const savedCurrency = localStorage.getItem('budgetCurrency');
@@ -86,8 +86,12 @@ function saveData() {
   const monthKey = getCurrentMonthKey();
   localStorage.setItem(monthKey, JSON.stringify(data));
   localStorage.setItem('budgetCurrency', currency);
-  localStorage.setItem('budgetStartDate', document.getElementById('startDate').value);
-  localStorage.setItem('budgetEndDate', document.getElementById('endDate').value);
+  
+  const startDateEl = document.getElementById('startDate');
+  const endDateEl = document.getElementById('endDate');
+  
+  if (startDateEl) localStorage.setItem('budgetStartDate', startDateEl.value);
+  if (endDateEl) localStorage.setItem('budgetEndDate', endDateEl.value);
   
   // Add to saved months list
   const savedMonths = getSavedMonths();
@@ -117,7 +121,7 @@ function viewPreviousMonths() {
   const savedMonths = getSavedMonths();
   
   if (savedMonths.length === 0) {
-    alert('No saved months yet! Save your current month first.');
+    alert('No saved months yet! Save your current month first by entering data and changing the date.');
     return;
   }
   
@@ -204,32 +208,32 @@ function viewYearlySummary() {
   html += '<h2 style="margin-bottom: 20px;">Yearly Summary</h2>';
   
   Object.keys(yearData).sort().reverse().forEach(year => {
-    const data = yearData[year];
-    const balance = data.income - data.expenses - data.bills - data.savings - data.debt;
+    const yearInfo = yearData[year];
+    const balance = yearInfo.income - yearInfo.expenses - yearInfo.bills - yearInfo.savings - yearInfo.debt;
     
     html += `
       <div style="background: #f8f5ff; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 2px solid #8b5cf6;">
-        <h2 style="margin-bottom: 15px; color: #8b5cf6;">${year} Summary (${data.months.length} months)</h2>
+        <h2 style="margin-bottom: 15px; color: #8b5cf6;">${year} Summary (${yearInfo.months.length} months)</h2>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 14px;">
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Income</div>
-            <div style="font-size: 20px; font-weight: bold; color: #10b981;">${currency}${data.income.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size: 20px; font-weight: bold; color: #10b981;">${currency}${yearInfo.income.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
           </div>
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Expenses</div>
-            <div style="font-size: 20px; font-weight: bold; color: #ef4444;">${currency}${data.expenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size: 20px; font-weight: bold; color: #ef4444;">${currency}${yearInfo.expenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
           </div>
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Bills</div>
-            <div style="font-size: 20px; font-weight: bold; color: #f97316;">${currency}${data.bills.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size: 20px; font-weight: bold; color: #f97316;">${currency}${yearInfo.bills.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
           </div>
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Savings</div>
-            <div style="font-size: 20px; font-weight: bold; color: #3b82f6;">${currency}${data.savings.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size: 20px; font-weight: bold; color: #3b82f6;">${currency}${yearInfo.savings.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
           </div>
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Total Debt</div>
-            <div style="font-size: 20px; font-weight: bold; color: #ec4899;">${currency}${data.debt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size: 20px; font-weight: bold; color: #ec4899;">${currency}${yearInfo.debt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
           </div>
           <div style="background: white; padding: 12px; border-radius: 6px;">
             <div style="color: #666; font-size: 12px; margin-bottom: 4px;">Net Balance</div>
@@ -251,24 +255,48 @@ function loadMonth(monthKey) {
   const year = parts[1];
   const month = parts[2];
   
-  // Update date picker
-  const newDate = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
-  document.getElementById('startDate').value = newDate;
-  
-  // Calculate end date
-  const endDateObj = new Date(year, parseInt(month) + 1, 0);
-  document.getElementById('endDate').value = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-${endDateObj.getDate()}`;
-  
-  // Load data
-  const monthData = JSON.parse(localStorage.getItem(monthKey));
-  Object.assign(data, monthData);
-  
-  // Close modal and update
+  // Close modal first
   closeModal();
-  updateMonth();
-  updateAll();
   
-  alert('Month loaded! You can now view and edit this month.');
+  // Wait for modal to close
+  setTimeout(() => {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (!startDateInput || !endDateInput) {
+      alert('Error: Could not find date inputs. Please refresh the page.');
+      return;
+    }
+    
+    // Update date picker
+    const newDate = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-01`;
+    startDateInput.value = newDate;
+    
+    // Calculate end date
+    const endDateObj = new Date(year, parseInt(month) + 1, 0);
+    endDateInput.value = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-${endDateObj.getDate()}`;
+    
+    // Load data for this month
+    const monthData = localStorage.getItem(monthKey);
+    if (monthData) {
+      const parsedData = JSON.parse(monthData);
+      
+      // Update data object
+      data.income = parsedData.income || [];
+      data.bills = parsedData.bills || [];
+      data.expenses = parsedData.expenses || [];
+      data.savings = parsedData.savings || [];
+      data.debt = parsedData.debt || [];
+      
+      // Update displays
+      updateMonth();
+      updateAll();
+      
+      alert('Month loaded successfully!');
+    } else {
+      alert('Error: Month data not found.');
+    }
+  }, 100);
 }
 
 // Delete a month
@@ -318,7 +346,6 @@ function closeModal() {
 // Clear all saved data
 function clearAllData() {
   if (confirm('Are you sure you want to clear ALL data including all saved months? This cannot be undone!')) {
-    // Clear all budget data
     const savedMonths = getSavedMonths();
     savedMonths.forEach(monthKey => {
       localStorage.removeItem(monthKey);
@@ -381,26 +408,36 @@ function calculateTotal(category, field) {
 }
 
 function updateMonth() {
-  const startDate = document.getElementById('startDate').value;
-  if (startDate) {
-    const date = new Date(startDate);
+  const startDateEl = document.getElementById('startDate');
+  if (startDateEl && startDateEl.value) {
+    const date = new Date(startDateEl.value);
     const monthNames = ["January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"];
-    document.getElementById('monthName').textContent = monthNames[date.getMonth()];
+    const monthNameEl = document.getElementById('monthName');
+    if (monthNameEl) {
+      monthNameEl.textContent = monthNames[date.getMonth()];
+    }
     
     // Load data for this month if it exists
     const monthKey = getCurrentMonthKey();
     const existingData = localStorage.getItem(monthKey);
     if (existingData) {
       const monthData = JSON.parse(existingData);
-      Object.assign(data, monthData);
+      data.income = monthData.income || data.income;
+      data.bills = monthData.bills || data.bills;
+      data.expenses = monthData.expenses || data.expenses;
+      data.savings = monthData.savings || data.savings;
+      data.debt = monthData.debt || data.debt;
     }
   }
   saveData();
 }
 
 function updateAll() {
-  currency = document.getElementById('currency').value;
+  const currencyEl = document.getElementById('currency');
+  if (currencyEl) {
+    currency = currencyEl.value;
+  }
   
   const totalIncome = calculateTotal('income', 'actual');
   const totalExpenses = calculateTotal('expenses', 'actual');
@@ -409,25 +446,47 @@ function updateAll() {
   const totalDebt = calculateTotal('debt', 'actual');
   const leftAmount = totalIncome - totalExpenses - totalBills - totalSavings - totalDebt;
   
-  document.getElementById('summaryIncome').textContent = formatCurrency(totalIncome);
-  document.getElementById('summaryExpenses').textContent = formatCurrency(totalExpenses);
-  document.getElementById('summaryBills').textContent = formatCurrency(totalBills);
-  document.getElementById('summarySavings').textContent = formatCurrency(totalSavings);
-  document.getElementById('summaryDebt').textContent = formatCurrency(totalDebt);
+  // Update summary cards
+  const summaryIncome = document.getElementById('summaryIncome');
+  const summaryExpenses = document.getElementById('summaryExpenses');
+  const summaryBills = document.getElementById('summaryBills');
+  const summarySavings = document.getElementById('summarySavings');
+  const summaryDebt = document.getElementById('summaryDebt');
   
-  document.getElementById('foIncomePlanned').textContent = formatCurrency(calculateTotal('income', 'planned'));
-  document.getElementById('foIncomeActual').textContent = formatCurrency(totalIncome);
-  document.getElementById('foExpensesPlanned').textContent = formatCurrency(calculateTotal('expenses', 'planned'));
-  document.getElementById('foExpensesActual').textContent = formatCurrency(totalExpenses);
-  document.getElementById('foBillsPlanned').textContent = formatCurrency(calculateTotal('bills', 'planned'));
-  document.getElementById('foBillsActual').textContent = formatCurrency(totalBills);
-  document.getElementById('foSavingsPlanned').textContent = formatCurrency(calculateTotal('savings', 'planned'));
-  document.getElementById('foSavingsActual').textContent = formatCurrency(totalSavings);
-  document.getElementById('foDebtPlanned').textContent = formatCurrency(calculateTotal('debt', 'planned'));
-  document.getElementById('foDebtActual').textContent = formatCurrency(totalDebt);
-  document.getElementById('foLeftPlanned').textContent = formatCurrency(leftAmount);
-  document.getElementById('foLeftActual').textContent = formatCurrency(leftAmount);
-  document.getElementById('amountLeft').textContent = formatCurrency(leftAmount);
+  if (summaryIncome) summaryIncome.textContent = formatCurrency(totalIncome);
+  if (summaryExpenses) summaryExpenses.textContent = formatCurrency(totalExpenses);
+  if (summaryBills) summaryBills.textContent = formatCurrency(totalBills);
+  if (summarySavings) summarySavings.textContent = formatCurrency(totalSavings);
+  if (summaryDebt) summaryDebt.textContent = formatCurrency(totalDebt);
+  
+  // Update financial overview
+  const foIncomePlanned = document.getElementById('foIncomePlanned');
+  const foIncomeActual = document.getElementById('foIncomeActual');
+  const foExpensesPlanned = document.getElementById('foExpensesPlanned');
+  const foExpensesActual = document.getElementById('foExpensesActual');
+  const foBillsPlanned = document.getElementById('foBillsPlanned');
+  const foBillsActual = document.getElementById('foBillsActual');
+  const foSavingsPlanned = document.getElementById('foSavingsPlanned');
+  const foSavingsActual = document.getElementById('foSavingsActual');
+  const foDebtPlanned = document.getElementById('foDebtPlanned');
+  const foDebtActual = document.getElementById('foDebtActual');
+  const foLeftPlanned = document.getElementById('foLeftPlanned');
+  const foLeftActual = document.getElementById('foLeftActual');
+  const amountLeft = document.getElementById('amountLeft');
+  
+  if (foIncomePlanned) foIncomePlanned.textContent = formatCurrency(calculateTotal('income', 'planned'));
+  if (foIncomeActual) foIncomeActual.textContent = formatCurrency(totalIncome);
+  if (foExpensesPlanned) foExpensesPlanned.textContent = formatCurrency(calculateTotal('expenses', 'planned'));
+  if (foExpensesActual) foExpensesActual.textContent = formatCurrency(totalExpenses);
+  if (foBillsPlanned) foBillsPlanned.textContent = formatCurrency(calculateTotal('bills', 'planned'));
+  if (foBillsActual) foBillsActual.textContent = formatCurrency(totalBills);
+  if (foSavingsPlanned) foSavingsPlanned.textContent = formatCurrency(calculateTotal('savings', 'planned'));
+  if (foSavingsActual) foSavingsActual.textContent = formatCurrency(totalSavings);
+  if (foDebtPlanned) foDebtPlanned.textContent = formatCurrency(calculateTotal('debt', 'planned'));
+  if (foDebtActual) foDebtActual.textContent = formatCurrency(totalDebt);
+  if (foLeftPlanned) foLeftPlanned.textContent = formatCurrency(leftAmount);
+  if (foLeftActual) foLeftActual.textContent = formatCurrency(leftAmount);
+  if (amountLeft) amountLeft.textContent = formatCurrency(leftAmount);
   
   updateCashFlow(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt);
   updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt, leftAmount);
@@ -441,6 +500,9 @@ function updateAll() {
 }
 
 function updateCashFlow(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt) {
+  const cashFlowEl = document.getElementById('cashFlow');
+  if (!cashFlowEl) return;
+  
   const categories = [
     { name: 'Expenses', value: totalExpenses },
     { name: 'Bills', value: totalBills },
@@ -464,7 +526,7 @@ function updateCashFlow(totalIncome, totalExpenses, totalBills, totalSavings, to
       </div>
     `;
   });
-  document.getElementById('cashFlow').innerHTML = html;
+  cashFlowEl.innerHTML = html;
 }
 
 function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt, leftAmount) {
@@ -494,7 +556,7 @@ function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, to
   let svgPaths = '';
   let legends = '';
   
-  categories.forEach((cat, index) => {
+  categories.forEach((cat) => {
     const percentage = (cat.value / total) * 100;
     if (percentage > 0) {
       const sliceAngle = (cat.value / total) * 360;
@@ -542,6 +604,8 @@ function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, to
 
 function renderTable(category, tableId, hasProgress) {
   const tbody = document.getElementById(tableId);
+  if (!tbody) return;
+  
   let items = data[category];
   
   // Apply filter
@@ -553,7 +617,7 @@ function renderTable(category, tableId, hasProgress) {
     }
   }
   
-  let html = items.map((item, originalIdx) => {
+  let html = items.map((item) => {
     const idx = data[category].indexOf(item);
     const progress = item.planned > 0 ? ((item.actual / item.planned) * 100).toFixed(2) + '%' : '100.00%';
     const checkbox = hasProgress ? `
@@ -590,7 +654,7 @@ function renderTable(category, tableId, hasProgress) {
   if (hasProgress) {
     filterButtons = `
       <tr>
-        <td colspan="${hasProgress ? 4 : 3}" style="text-align: center; padding: 10px;">
+        <td colspan="4" style="text-align: center; padding: 10px;">
           <button onclick="addNewItem('${category}')" style="margin: 0 10px 0 0; padding: 5px 15px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold;" title="Add new item">+ Add New</button>
           <button onclick="setFilter('${category}', 'all')" style="margin: 0 5px; padding: 5px 10px; background: ${filterState[category] === 'all' ? '#8b5cf6' : '#e9d5ff'}; color: ${filterState[category] === 'all' ? 'white' : '#333'}; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">All</button>
           <button onclick="setFilter('${category}', 'checked')" style="margin: 0 5px; padding: 5px 10px; background: ${filterState[category] === 'checked' ? '#8b5cf6' : '#e9d5ff'}; color: ${filterState[category] === 'checked' ? 'white' : '#333'}; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Paid</button>
@@ -620,11 +684,21 @@ function renderTable(category, tableId, hasProgress) {
   tbody.innerHTML = html;
 }
 
-// Load saved dates on startup
-if (savedStartDate) document.getElementById('startDate').value = savedStartDate;
-if (savedEndDate) document.getElementById('endDate').value = savedEndDate;
-if (savedCurrency) document.getElementById('currency').value = savedCurrency;
-
-// Initialize
-updateAll();
-updateMonth();
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Load month data
+  data = loadMonthData();
+  
+  // Load saved dates on startup
+  const startDateEl = document.getElementById('startDate');
+  const endDateEl = document.getElementById('endDate');
+  const currencyEl = document.getElementById('currency');
+  
+  if (savedStartDate && startDateEl) startDateEl.value = savedStartDate;
+  if (savedEndDate && endDateEl) endDateEl.value = savedEndDate;
+  if (savedCurrency && currencyEl) currencyEl.value = savedCurrency;
+  
+  // Initialize
+  updateMonth();
+  updateAll();
+});
