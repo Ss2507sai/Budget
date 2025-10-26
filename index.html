@@ -1,668 +1,652 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.1">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Dashboard - October 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f0ff 0%, #ffe5f0 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        .top-controls {
+            background: #f8f5ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-group label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #333;
+            letter-spacing: 1px;
+        }
+        .date-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .date-inputs input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0d4f7;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .control-group select {
+            padding: 10px;
+            border: 2px solid #e0d4f7;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .summary-card {
+            background: #e9d5ff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-card .label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .summary-card .amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .dashboard-card {
+            background: #f8f5ff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .dashboard-card.white {
+            background: white;
+            border: 2px solid #e9d5ff;
+        }
+        .dashboard-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            color: #333;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .financial-table {
+            font-size: 13px;
+        }
+        .financial-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .financial-table th {
+            text-align: right;
+            font-weight: 700;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+        .financial-table td {
+            padding: 6px 8px;
+            text-align: right;
+        }
+        .financial-table td:first-child {
+            text-align: left;
+        }
+        .financial-table .total-row {
+            border-top: 2px solid #c4b5fd;
+            font-weight: 700;
+        }
+        .amount-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        .amount-left .big-amount {
+            font-size: 48px;
+            font-weight: 700;
+            color: #333;
+            margin-top: 10px;
+        }
+        .cash-flow-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chart-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #555;
+        }
+        .chart-bars {
+            display: flex;
+            gap: 6px;
+            height: 24px;
+        }
+        .chart-bar {
+            border-radius: 4px;
+        }
+        .chart-bar.planned {
+            background: #f8bbd0;
+        }
+        .chart-bar.actual {
+            background: #c4b5fd;
+        }
+        .category-tables {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .category-card {
+            background: #f8f5ff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .category-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+            color: #333;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .category-table {
+            width: 100%;
+            font-size: 12px;
+        }
+        .category-table thead th {
+            text-align: center;
+            font-weight: 700;
+            padding: 8px 4px;
+            font-size: 11px;
+            border-bottom: 2px solid #c4b5fd;
+        }
+        .category-table tbody td {
+            padding: 6px 4px;
+            text-align: center;
+        }
+        .category-table tbody td:first-child {
+            text-align: left;
+        }
+        .category-table input[type="number"] {
+            width: 90%;
+            padding: 4px;
+            border: 1px solid #e0d4f7;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .category-table input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .category-table .total-row {
+            border-top: 2px solid #8b5cf6;
+            font-weight: 700;
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .item-row span {
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Budget Dashboard - October 2025&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>* {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: Arial, sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: linear-gradient(135deg, #f5f0ff 0%, #ffe5f0 100%);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 100vh;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.container {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 1400px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 20px rgba(0,0,0,0.1);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header h1 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 36px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 5px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.header .subtitle {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 14px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 2px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.top-controls {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8f5ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: 2fr 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.control-group {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.control-group label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 1px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.date-inputs {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.date-inputs input {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex: 1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #e0d4f7;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 6px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 14px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.control-group select {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #e0d4f7;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 6px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 14px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.summary-cards {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(5, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.summary-card {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #e9d5ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.summary-card .label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 11px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #555;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 1px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.summary-card .amount {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 24px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.dashboard-row {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: 1fr 1fr 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.dashboard-card {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8f5ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.dashboard-card.white {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #e9d5ff;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.dashboard-card h3 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 13px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 1px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 13px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table table {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-collapse: collapse;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table th {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: right;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 6px 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 11px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table td {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 6px 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: right;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table td:first-child {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: left;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.financial-table .total-row {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 2px solid #c4b5fd;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.amount-left {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.amount-left .big-amount {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 48px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cash-flow-chart {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-item {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: space-between;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 11px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #555;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-bars {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 6px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 24px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-bar {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-bar.planned {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8bbd0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.chart-bar.actual {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #c4b5fd;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-tables {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: 1fr 1fr;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-card {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8f5ff;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-card h3 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 13px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 1px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table thead th {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 8px 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 11px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 2px solid #c4b5fd;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table tbody td {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 6px 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table tbody td:first-child {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: left;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table input[type="number"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 90%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #e0d4f7;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table input[type="checkbox"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-table .total-row {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 2px solid #8b5cf6;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.item-row {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 6px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.item-row span {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="header"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1&gt;October&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="subtitle"&gt;•BUDGET DASHBOARD•&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="top-controls"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="control-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;label&gt;BUDGET PERIOD&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="date-inputs"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="date" id="startDate" value="2025-10-01"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span&gt;-&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input type="date" id="endDate" value="2025-10-31"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="control-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;label&gt;CURRENCY&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;select id="currency"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;option value="₹"&gt;₹ (INR)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;option value="$"&gt;$ (USD)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;option value="€"&gt;€ (EUR)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;option value="£"&gt;£ (GBP)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;option value="¥"&gt;¥ (JPY)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="summary-cards"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="summary-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="label"&gt;INCOME&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount" id="summaryIncome"&gt;₹10,600.00&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="summary-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="label"&gt;EXPENSES&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount" id="summaryExpenses"&gt;₹2,430.00&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="summary-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="label"&gt;BILLS&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount" id="summaryBills"&gt;₹2,828.50&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="summary-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="label"&gt;SAVINGS&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount" id="summarySavings"&gt;₹4,570.00&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="summary-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="label"&gt;DEBT&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount" id="summaryDebt"&gt;₹855.00&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="dashboard-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="dashboard-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;FINANCIAL OVERVIEW&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="financial-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;• Rollover&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;-&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;-&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;• Income&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foIncomePlanned"&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foIncomeActual"&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;- Expenses&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foExpensesPlanned"&gt;₹2,430.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foExpensesActual"&gt;₹2,430.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;- Bills&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foBillsPlanned"&gt;₹2,828.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foBillsActual"&gt;₹2,828.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;- Savings&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foSavingsPlanned"&gt;₹4,570.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foSavingsActual"&gt;₹4,570.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;- Debt&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foDebtPlanned"&gt;₹855.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foDebtActual"&gt;₹855.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td&gt;LEFT&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foLeftPlanned"&gt;₹-83.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;td id="foLeftActual"&gt;₹-83.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="dashboard-card white"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;AMOUNT LEFT TO SPEND&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="amount-left"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="big-amount" id="amountLeft"&gt;₹0.00&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="dashboard-card white"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;CASH FLOW&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="cash-flow-chart"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="chart-item"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-label"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Expenses&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;₹2,430.00&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-bars"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar planned" style="width: 23%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar actual" style="width: 23%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="chart-item"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-label"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Bills&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;₹2,828.50&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-bars"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar planned" style="width: 27%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar actual" style="width: 27%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="chart-item"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-label"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Savings&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;₹4,570.00&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-bars"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar planned" style="width: 43%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar actual" style="width: 43%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="chart-item"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-label"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Debt&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;₹855.00&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="chart-bars"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar planned" style="width: 8%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="chart-bar actual" style="width: 8%"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="category-tables"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="category-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;INCOME&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;table class="category-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;Realtor income&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;TOTAL&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹10,600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="category-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;BILLS&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;table class="category-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PROGRESS&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Apartment&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,300.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,300.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Internet&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹85.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹85.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Electricity&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹190.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹190.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Water&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹50.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹50.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Netflix&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹18.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹18.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Gym membership&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹45.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹45.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Car insurance&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹140.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹140.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;TOTAL&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,828.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,828.50&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="category-tables"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="category-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;EXPENSES&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;table class="category-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PROGRESS&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Groceries&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹550.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹550.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Eating out&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹300.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹300.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Shopping&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹700.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹700.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Business expenses&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹650.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹650.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Hairhails&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹230.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹230.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;TOTAL&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,430.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,430.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="category-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;SAVINGS&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;table class="category-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PROGRESS&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Retirement account&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹600.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Emergencies&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹800.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹800.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Vacation to the US&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹350.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹350.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Savings account&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,820.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹2,820.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;TOTAL&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹4,570.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹4,570.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="category-tables"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="category-card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;DEBT&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;table class="category-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PLANNED&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;ACTUAL&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;th&gt;PROGRESS&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Car lease&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹420.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹420.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Credit card&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹315.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹315.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;&lt;div class="item-row"&gt;&lt;input type="checkbox" checked&gt;&lt;span&gt;Business loan&lt;/span&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹120.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹120.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;tr class="total-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;TOTAL&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹855.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;₹855.00&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;td&gt;100.00%&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+    <div class="container">
+        <div class="header">
+            <h1>October</h1>
+            <div class="subtitle">•BUDGET DASHBOARD•</div>
+        </div>
+        
+        <div class="top-controls">
+            <div class="control-group">
+                <label>BUDGET PERIOD</label>
+                <div class="date-inputs">
+                    <input type="date" id="startDate" value="2025-10-01">
+                    <span>-</span>
+                    <input type="date" id="endDate" value="2025-10-31">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>CURRENCY</label>
+                <select id="currency">
+                    <option value="₹">₹ (INR)</option>
+                    <option value="$">$ (USD)</option>
+                    <option value="€">€ (EUR)</option>
+                    <option value="£">£ (GBP)</option>
+                    <option value="¥">¥ (JPY)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="label">INCOME</div>
+                <div class="amount" id="summaryIncome">₹10,600.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">EXPENSES</div>
+                <div class="amount" id="summaryExpenses">₹2,430.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">BILLS</div>
+                <div class="amount" id="summaryBills">₹2,828.50</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">SAVINGS</div>
+                <div class="amount" id="summarySavings">₹4,570.00</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">DEBT</div>
+                <div class="amount" id="summaryDebt">₹855.00</div>
+            </div>
+        </div>
+        
+        <div class="dashboard-row">
+            <div class="dashboard-card">
+                <h3>FINANCIAL OVERVIEW</h3>
+                <div class="financial-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>• Rollover</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>• Income</td>
+                                <td id="foIncomePlanned">₹10,600.00</td>
+                                <td id="foIncomeActual">₹10,600.00</td>
+                            </tr>
+                            <tr>
+                                <td>- Expenses</td>
+                                <td id="foExpensesPlanned">₹2,430.00</td>
+                                <td id="foExpensesActual">₹2,430.00</td>
+                            </tr>
+                            <tr>
+                                <td>- Bills</td>
+                                <td id="foBillsPlanned">₹2,828.50</td>
+                                <td id="foBillsActual">₹2,828.50</td>
+                            </tr>
+                            <tr>
+                                <td>- Savings</td>
+                                <td id="foSavingsPlanned">₹4,570.00</td>
+                                <td id="foSavingsActual">₹4,570.00</td>
+                            </tr>
+                            <tr>
+                                <td>- Debt</td>
+                                <td id="foDebtPlanned">₹855.00</td>
+                                <td id="foDebtActual">₹855.00</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>LEFT</td>
+                                <td id="foLeftPlanned">₹-83.50</td>
+                                <td id="foLeftActual">₹-83.50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="dashboard-card white">
+                <h3>AMOUNT LEFT TO SPEND</h3>
+                <div class="amount-left">
+                    <div class="big-amount" id="amountLeft">₹0.00</div>
+                </div>
+            </div>
+            
+            <div class="dashboard-card white">
+                <h3>CASH FLOW</h3>
+                <div class="cash-flow-chart">
+                    <div class="chart-item">
+                        <div class="chart-label">
+                            <span>Expenses</span>
+                            <span>₹2,430.00</span>
+                        </div>
+                        <div class="chart-bars">
+                            <div class="chart-bar planned" style="width: 23%"></div>
+                            <div class="chart-bar actual" style="width: 23%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-item">
+                        <div class="chart-label">
+                            <span>Bills</span>
+                            <span>₹2,828.50</span>
+                        </div>
+                        <div class="chart-bars">
+                            <div class="chart-bar planned" style="width: 27%"></div>
+                            <div class="chart-bar actual" style="width: 27%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-item">
+                        <div class="chart-label">
+                            <span>Savings</span>
+                            <span>₹4,570.00</span>
+                        </div>
+                        <div class="chart-bars">
+                            <div class="chart-bar planned" style="width: 43%"></div>
+                            <div class="chart-bar actual" style="width: 43%"></div>
+                        </div>
+                    </div>
+                    <div class="chart-item">
+                        <div class="chart-label">
+                            <span>Debt</span>
+                            <span>₹855.00</span>
+                        </div>
+                        <div class="chart-bars">
+                            <div class="chart-bar planned" style="width: 8%"></div>
+                            <div class="chart-bar actual" style="width: 8%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="category-tables">
+            <div class="category-card">
+                <h3>INCOME</h3>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Realtor income</td>
+                            <td>₹10,600.00</td>
+                            <td>₹10,600.00</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td>₹10,600.00</td>
+                            <td>₹10,600.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="category-card">
+                <h3>BILLS</h3>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                            <th>PROGRESS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Apartment</span></div></td>
+                            <td>₹2,300.00</td>
+                            <td>₹2,300.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Internet</span></div></td>
+                            <td>₹85.00</td>
+                            <td>₹85.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Electricity</span></div></td>
+                            <td>₹190.00</td>
+                            <td>₹190.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Water</span></div></td>
+                            <td>₹50.00</td>
+                            <td>₹50.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Netflix</span></div></td>
+                            <td>₹18.50</td>
+                            <td>₹18.50</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Gym membership</span></div></td>
+                            <td>₹45.00</td>
+                            <td>₹45.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Car insurance</span></div></td>
+                            <td>₹140.00</td>
+                            <td>₹140.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td>₹2,828.50</td>
+                            <td>₹2,828.50</td>
+                            <td>100.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="category-tables">
+            <div class="category-card">
+                <h3>EXPENSES</h3>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                            <th>PROGRESS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Groceries</span></div></td>
+                            <td>₹550.00</td>
+                            <td>₹550.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Eating out</span></div></td>
+                            <td>₹300.00</td>
+                            <td>₹300.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Shopping</span></div></td>
+                            <td>₹700.00</td>
+                            <td>₹700.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Business expenses</span></div></td>
+                            <td>₹650.00</td>
+                            <td>₹650.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Hairhails</span></div></td>
+                            <td>₹230.00</td>
+                            <td>₹230.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td>₹2,430.00</td>
+                            <td>₹2,430.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="category-card">
+                <h3>SAVINGS</h3>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                            <th>PROGRESS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Retirement account</span></div></td>
+                            <td>₹600.00</td>
+                            <td>₹600.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Emergencies</span></div></td>
+                            <td>₹800.00</td>
+                            <td>₹800.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Vacation to the US</span></div></td>
+                            <td>₹350.00</td>
+                            <td>₹350.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Savings account</span></div></td>
+                            <td>₹2,820.00</td>
+                            <td>₹2,820.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td>₹4,570.00</td>
+                            <td>₹4,570.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="category-tables">
+            <div class="category-card">
+                <h3>DEBT</h3>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                            <th>PROGRESS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Car lease</span></div></td>
+                            <td>₹420.00</td>
+                            <td>₹420.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Credit card</span></div></td>
+                            <td>₹315.00</td>
+                            <td>₹315.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr>
+                            <td><div class="item-row"><input type="checkbox" checked><span>Business loan</span></div></td>
+                            <td>₹120.00</td>
+                            <td>₹120.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL</td>
+                            <td>₹855.00</td>
+                            <td>₹855.00</td>
+                            <td>100.00%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div></div>
+        </div>
+    </div>
 </body>
 </html>
