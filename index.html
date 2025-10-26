@@ -1,652 +1,234 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Dashboard - October 2025</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f0ff 0%, #ffe5f0 100%);
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            font-size: 36px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .header .subtitle {
-            color: #666;
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
-        .top-controls {
-            background: #f8f5ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .control-group label {
-            font-weight: 600;
-            font-size: 12px;
-            color: #333;
-            letter-spacing: 1px;
-        }
-        .date-inputs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .date-inputs input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e0d4f7;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .control-group select {
-            padding: 10px;
-            border: 2px solid #e0d4f7;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .summary-card {
-            background: #e9d5ff;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .summary-card .label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #555;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .summary-card .amount {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-        }
-        .dashboard-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .dashboard-card {
-            background: #f8f5ff;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .dashboard-card.white {
-            background: white;
-            border: 2px solid #e9d5ff;
-        }
-        .dashboard-card h3 {
-            font-size: 13px;
-            font-weight: 700;
-            text-align: center;
-            color: #333;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        .financial-table {
-            font-size: 13px;
-        }
-        .financial-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .financial-table th {
-            text-align: right;
-            font-weight: 700;
-            padding: 6px 8px;
-            font-size: 11px;
-        }
-        .financial-table td {
-            padding: 6px 8px;
-            text-align: right;
-        }
-        .financial-table td:first-child {
-            text-align: left;
-        }
-        .financial-table .total-row {
-            border-top: 2px solid #c4b5fd;
-            font-weight: 700;
-        }
-        .amount-left {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-        .amount-left .big-amount {
-            font-size: 48px;
-            font-weight: 700;
-            color: #333;
-            margin-top: 10px;
-        }
-        .cash-flow-chart {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .chart-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .chart-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #555;
-        }
-        .chart-bars {
-            display: flex;
-            gap: 6px;
-            height: 24px;
-        }
-        .chart-bar {
-            border-radius: 4px;
-        }
-        .chart-bar.planned {
-            background: #f8bbd0;
-        }
-        .chart-bar.actual {
-            background: #c4b5fd;
-        }
-        .category-tables {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .category-card {
-            background: #f8f5ff;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .category-card h3 {
-            font-size: 13px;
-            font-weight: 700;
-            text-align: center;
-            color: #333;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        .category-table {
-            width: 100%;
-            font-size: 12px;
-        }
-        .category-table thead th {
-            text-align: center;
-            font-weight: 700;
-            padding: 8px 4px;
-            font-size: 11px;
-            border-bottom: 2px solid #c4b5fd;
-        }
-        .category-table tbody td {
-            padding: 6px 4px;
-            text-align: center;
-        }
-        .category-table tbody td:first-child {
-            text-align: left;
-        }
-        .category-table input[type="number"] {
-            width: 90%;
-            padding: 4px;
-            border: 1px solid #e0d4f7;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 12px;
-        }
-        .category-table input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-        .category-table .total-row {
-            border-top: 2px solid #8b5cf6;
-            font-weight: 700;
-        }
-        .item-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .item-row span {
-            font-size: 12px;
-        }
-    </style>
+    <title>Budget Dashboard</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
+    
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>October</h1>
-            <div class="subtitle">•BUDGET DASHBOARD•</div>
-        </div>
-        
-        <div class="top-controls">
-            <div class="control-group">
-                <label>BUDGET PERIOD</label>
-                <div class="date-inputs">
-                    <input type="date" id="startDate" value="2025-10-01">
-                    <span>-</span>
-                    <input type="date" id="endDate" value="2025-10-31">
-                </div>
-            </div>
-            <div class="control-group">
-                <label>CURRENCY</label>
-                <select id="currency">
-                    <option value="₹">₹ (INR)</option>
-                    <option value="$">$ (USD)</option>
-                    <option value="€">€ (EUR)</option>
-                    <option value="£">£ (GBP)</option>
-                    <option value="¥">¥ (JPY)</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="summary-cards">
-            <div class="summary-card">
-                <div class="label">INCOME</div>
-                <div class="amount" id="summaryIncome">₹10,600.00</div>
-            </div>
-            <div class="summary-card">
-                <div class="label">EXPENSES</div>
-                <div class="amount" id="summaryExpenses">₹2,430.00</div>
-            </div>
-            <div class="summary-card">
-                <div class="label">BILLS</div>
-                <div class="amount" id="summaryBills">₹2,828.50</div>
-            </div>
-            <div class="summary-card">
-                <div class="label">SAVINGS</div>
-                <div class="amount" id="summarySavings">₹4,570.00</div>
-            </div>
-            <div class="summary-card">
-                <div class="label">DEBT</div>
-                <div class="amount" id="summaryDebt">₹855.00</div>
+<div class="container">
+    <!-- Save indicator and Clear button -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+      <div id="saveIndicator" style="display: none; background: #4ade80; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+        ✓ Saved!
+      </div>
+      <button onclick="clearAllData()" style="margin-top: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">
+        Clear All Data
+      </button>
+    </div>
+
+    <div class="header">
+        <h1 id="monthName">October</h1>
+        <div class="subtitle">•BUDGET DASHBOARD•</div>
+    </div>
+    
+    <div class="top-controls">
+        <div class="control-group">
+            <label>BUDGET PERIOD</label>
+            <div class="date-inputs">
+                <input type="date" id="startDate" value="2025-10-01" onchange="updateMonth()">
+                <span>-</span>
+                <input type="date" id="endDate" value="2025-10-31">
             </div>
         </div>
-        
-        <div class="dashboard-row">
-            <div class="dashboard-card">
-                <h3>FINANCIAL OVERVIEW</h3>
-                <div class="financial-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>PLANNED</th>
-                                <th>ACTUAL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>• Rollover</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>• Income</td>
-                                <td id="foIncomePlanned">₹10,600.00</td>
-                                <td id="foIncomeActual">₹10,600.00</td>
-                            </tr>
-                            <tr>
-                                <td>- Expenses</td>
-                                <td id="foExpensesPlanned">₹2,430.00</td>
-                                <td id="foExpensesActual">₹2,430.00</td>
-                            </tr>
-                            <tr>
-                                <td>- Bills</td>
-                                <td id="foBillsPlanned">₹2,828.50</td>
-                                <td id="foBillsActual">₹2,828.50</td>
-                            </tr>
-                            <tr>
-                                <td>- Savings</td>
-                                <td id="foSavingsPlanned">₹4,570.00</td>
-                                <td id="foSavingsActual">₹4,570.00</td>
-                            </tr>
-                            <tr>
-                                <td>- Debt</td>
-                                <td id="foDebtPlanned">₹855.00</td>
-                                <td id="foDebtActual">₹855.00</td>
-                            </tr>
-                            <tr class="total-row">
-                                <td>LEFT</td>
-                                <td id="foLeftPlanned">₹-83.50</td>
-                                <td id="foLeftActual">₹-83.50</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div class="dashboard-card white">
-                <h3>AMOUNT LEFT TO SPEND</h3>
-                <div class="amount-left">
-                    <div class="big-amount" id="amountLeft">₹0.00</div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card white">
-                <h3>CASH FLOW</h3>
-                <div class="cash-flow-chart">
-                    <div class="chart-item">
-                        <div class="chart-label">
-                            <span>Expenses</span>
-                            <span>₹2,430.00</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-bar planned" style="width: 23%"></div>
-                            <div class="chart-bar actual" style="width: 23%"></div>
-                        </div>
-                    </div>
-                    <div class="chart-item">
-                        <div class="chart-label">
-                            <span>Bills</span>
-                            <span>₹2,828.50</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-bar planned" style="width: 27%"></div>
-                            <div class="chart-bar actual" style="width: 27%"></div>
-                        </div>
-                    </div>
-                    <div class="chart-item">
-                        <div class="chart-label">
-                            <span>Savings</span>
-                            <span>₹4,570.00</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-bar planned" style="width: 43%"></div>
-                            <div class="chart-bar actual" style="width: 43%"></div>
-                        </div>
-                    </div>
-                    <div class="chart-item">
-                        <div class="chart-label">
-                            <span>Debt</span>
-                            <span>₹855.00</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-bar planned" style="width: 8%"></div>
-                            <div class="chart-bar actual" style="width: 8%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="category-tables">
-            <div class="category-card">
-                <h3>INCOME</h3>
-                <table class="category-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Realtor income</td>
-                            <td>₹10,600.00</td>
-                            <td>₹10,600.00</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td>₹10,600.00</td>
-                            <td>₹10,600.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="category-card">
-                <h3>BILLS</h3>
-                <table class="category-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                            <th>PROGRESS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Apartment</span></div></td>
-                            <td>₹2,300.00</td>
-                            <td>₹2,300.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Internet</span></div></td>
-                            <td>₹85.00</td>
-                            <td>₹85.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Electricity</span></div></td>
-                            <td>₹190.00</td>
-                            <td>₹190.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Water</span></div></td>
-                            <td>₹50.00</td>
-                            <td>₹50.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Netflix</span></div></td>
-                            <td>₹18.50</td>
-                            <td>₹18.50</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Gym membership</span></div></td>
-                            <td>₹45.00</td>
-                            <td>₹45.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Car insurance</span></div></td>
-                            <td>₹140.00</td>
-                            <td>₹140.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td>₹2,828.50</td>
-                            <td>₹2,828.50</td>
-                            <td>100.00%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="category-tables">
-            <div class="category-card">
-                <h3>EXPENSES</h3>
-                <table class="category-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                            <th>PROGRESS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Groceries</span></div></td>
-                            <td>₹550.00</td>
-                            <td>₹550.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Eating out</span></div></td>
-                            <td>₹300.00</td>
-                            <td>₹300.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Shopping</span></div></td>
-                            <td>₹700.00</td>
-                            <td>₹700.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Business expenses</span></div></td>
-                            <td>₹650.00</td>
-                            <td>₹650.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Hairhails</span></div></td>
-                            <td>₹230.00</td>
-                            <td>₹230.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td>₹2,430.00</td>
-                            <td>₹2,430.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="category-card">
-                <h3>SAVINGS</h3>
-                <table class="category-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                            <th>PROGRESS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Retirement account</span></div></td>
-                            <td>₹600.00</td>
-                            <td>₹600.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Emergencies</span></div></td>
-                            <td>₹800.00</td>
-                            <td>₹800.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Vacation to the US</span></div></td>
-                            <td>₹350.00</td>
-                            <td>₹350.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Savings account</span></div></td>
-                            <td>₹2,820.00</td>
-                            <td>₹2,820.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td>₹4,570.00</td>
-                            <td>₹4,570.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="category-tables">
-            <div class="category-card">
-                <h3>DEBT</h3>
-                <table class="category-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                            <th>PROGRESS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Car lease</span></div></td>
-                            <td>₹420.00</td>
-                            <td>₹420.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Credit card</span></div></td>
-                            <td>₹315.00</td>
-                            <td>₹315.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr>
-                            <td><div class="item-row"><input type="checkbox" checked><span>Business loan</span></div></td>
-                            <td>₹120.00</td>
-                            <td>₹120.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td>₹855.00</td>
-                            <td>₹855.00</td>
-                            <td>100.00%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div></div>
+        <div class="control-group">
+            <label>CURRENCY</label>
+            <select id="currency" onchange="updateAll()">
+                <option value="₹">₹ (INR)</option>
+                <option value="$">$ (USD)</option>
+                <option value="€">€ (EUR)</option>
+                <option value="£">£ (GBP)</option>
+                <option value="¥">¥ (JPY)</option>
+            </select>
         </div>
     </div>
+    
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="label">INCOME</div>
+            <div class="amount" id="summaryIncome">₹10,600.00</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">EXPENSES</div>
+            <div class="amount" id="summaryExpenses">₹2,430.00</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">BILLS</div>
+            <div class="amount" id="summaryBills">₹2,828.50</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">SAVINGS</div>
+            <div class="amount" id="summarySavings">₹4,570.00</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">DEBT</div>
+            <div class="amount" id="summaryDebt">₹855.00</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-row">
+        <div class="dashboard-card">
+            <h3>FINANCIAL OVERVIEW</h3>
+            <div class="financial-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PLANNED</th>
+                            <th>ACTUAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>• Rollover</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>• Income</td>
+                            <td id="foIncomePlanned">₹10,600.00</td>
+                            <td id="foIncomeActual">₹10,600.00</td>
+                        </tr>
+                        <tr>
+                            <td>- Expenses</td>
+                            <td id="foExpensesPlanned">₹2,430.00</td>
+                            <td id="foExpensesActual">₹2,430.00</td>
+                        </tr>
+                        <tr>
+                            <td>- Bills</td>
+                            <td id="foBillsPlanned">₹2,828.50</td>
+                            <td id="foBillsActual">₹2,828.50</td>
+                        </tr>
+                        <tr>
+                            <td>- Savings</td>
+                            <td id="foSavingsPlanned">₹4,570.00</td>
+                            <td id="foSavingsActual">₹4,570.00</td>
+                        </tr>
+                        <tr>
+                            <td>- Debt</td>
+                            <td id="foDebtPlanned">₹855.00</td>
+                            <td id="foDebtActual">₹855.00</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>LEFT</td>
+                            <td id="foLeftPlanned">₹-83.50</td>
+                            <td id="foLeftActual">₹-83.50</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="dashboard-card white">
+            <h3>AMOUNT LEFT TO SPEND</h3>
+            <div class="amount-left">
+                <div class="big-amount" id="amountLeft">₹-83.50</div>
+            </div>
+        </div>
+        
+        <div class="dashboard-card white">
+            <h3>CASH FLOW</h3>
+            <div class="cash-flow-chart" id="cashFlow">
+            </div>
+        </div>
+    </div>
+
+    <!-- PIE CHART SECTION -->
+    <div class="dashboard-card white" style="margin-bottom: 25px; padding: 30px;">
+        <h3>BUDGET BREAKDOWN - PIE CHART</h3>
+        <div id="pieChart"></div>
+    </div>
+    
+    <div class="category-tables">
+        <div class="category-card">
+            <h3>INCOME</h3>
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PLANNED</th>
+                        <th>ACTUAL</th>
+                    </tr>
+                </thead>
+                <tbody id="incomeTable">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="category-card">
+            <h3>BILLS</h3>
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PLANNED</th>
+                        <th>ACTUAL</th>
+                        <th>PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="category-tables">
+        <div class="category-card">
+            <h3>EXPENSES</h3>
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PLANNED</th>
+                        <th>ACTUAL</th>
+                        <th>PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody id="expensesTable">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="category-card">
+            <h3>SAVINGS</h3>
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PLANNED</th>
+                        <th>ACTUAL</th>
+                        <th>PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody id="savingsTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="category-tables">
+        <div class="category-card">
+            <h3>DEBT</h3>
+            <table class="category-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>PLANNED</th>
+                        <th>ACTUAL</th>
+                        <th>PROGRESS</th>
+                    </tr>
+                </thead>
+                <tbody id="debtTable">
+                </tbody>
+            </table>
+        </div>
+        <div></div>
+    </div>
+</div>
+    <script src="./script.js"></script>
+
 </body>
+  
 </html>
