@@ -1,8 +1,178 @@
+// ===== SUPABASE CONFIGURATION =====
+// TODO: REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'; // e.g., 'https://xxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; // Your anon/public key
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===== GLOBAL STATE =====
+let currentUser = null;
 let currency = '₹';
 let currentMonth = '';
 let currentYear = '';
+let data = getDefaultData();
+let filterState = {
+  expenses: 'all',
+  bills: 'all',
+  savings: 'all',
+  debt: 'all'
+};
 
-// Get current month and year from date picker
+// ===== AUTHENTICATION FUNCTIONS =====
+
+// Check authentication on page load
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session) {
+    currentUser = session.user;
+    showDashboard();
+  } else {
+    showAuthScreen();
+  }
+}
+
+// Show authentication screen
+function showAuthScreen() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('mainDashboard').style.display = 'none';
+}
+
+// Show dashboard
+async function showDashboard() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainDashboard').style.display = 'block';
+  document.getElementById('userEmailDisplay').textContent = currentUser.email;
+  
+  // Load user's budget data from Supabase
+  await loadMonthDataFromSupabase();
+  updateMonth();
+  updateAll();
+}
+
+// Handle login/signup form submission
+document.addEventListener('DOMContentLoaded', function() {
+  const authForm = document.getElementById('authForm');
+  const toggleAuth = document.getElementById('toggleAuth');
+  let isLoginMode = true;
+
+  if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const submitBtn = document.getElementById('authSubmitBtn');
+      
+      hideMessages();
+      submitBtn.disabled = true;
+      submitBtn.textContent = isLoginMode ? 'Logging in...' : 'Signing up...';
+
+      try {
+        if (isLoginMode) {
+          // Login
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) throw error;
+          
+          currentUser = data.user;
+          showDashboard();
+        } else {
+          // Signup
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password
+          });
+
+          if (error) throw error;
+          
+          showSuccess('Account created successfully! You can now login.');
+          setTimeout(() => {
+            toggleAuthMode();
+          }, 2000);
+        }
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = isLoginMode ? 'Login' : 'Sign Up';
+      }
+    });
+  }
+
+  if (toggleAuth) {
+    toggleAuth.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleAuthMode();
+    });
+  }
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    
+    const authTitle = document.getElementById('authTitle');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const toggleText = document.getElementById('toggleText');
+    const toggleAuthLink = document.getElementById('toggleAuth');
+    
+    if (isLoginMode) {
+      authTitle.textContent = 'Login';
+      authSubmitBtn.textContent = 'Login';
+      toggleText.textContent = "Don't have an account?";
+      toggleAuthLink.textContent = 'Sign Up';
+    } else {
+      authTitle.textContent = 'Sign Up';
+      authSubmitBtn.textContent = 'Sign Up';
+      toggleText.textContent = 'Already have an account?';
+      toggleAuthLink.textContent = 'Login';
+    }
+    
+    hideMessages();
+  }
+
+  // Check auth on load
+  checkAuth();
+});
+
+// Handle logout
+async function handleLogout() {
+  await supabase.auth.signOut();
+  currentUser = null;
+  showAuthScreen();
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+}
+
+// Show error message
+function showError(message) {
+  const errorEl = document.getElementById('errorMessage');
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+  document.getElementById('successMessage').style.display = 'none';
+}
+
+// Show success message
+function showSuccess(message) {
+  const successEl = document.getElementById('successMessage');
+  successEl.textContent = message;
+  successEl.style.display = 'block';
+  document.getElementById('errorMessage').style.display = 'none';
+}
+
+// Hide messages
+function hideMessages() {
+  document.getElementById('errorMessage').style.display = 'none';
+  document.getElementById('successMessage').style.display = 'none';
+}
+
+// ===== DATA MANAGEMENT FUNCTIONS =====
+
 function getCurrentMonthKey() {
   const startDate = document.getElementById('startDate');
   if (startDate && startDate.value) {
@@ -12,13 +182,6 @@ function getCurrentMonthKey() {
     return `budget_${currentYear}_${currentMonth}`;
   }
   return 'budget_current';
-}
-
-// Load data for current month
-function loadMonthData() {
-  const monthKey = getCurrentMonthKey();
-  const savedData = localStorage.getItem(monthKey);
-  return savedData ? JSON.parse(savedData) : getDefaultData();
 }
 
 function getDefaultData() {
@@ -64,71 +227,103 @@ function getDefaultData() {
   };
 }
 
-let data = getDefaultData();
-
-// Load saved currency and dates
-const savedCurrency = localStorage.getItem('budgetCurrency');
-if (savedCurrency) currency = savedCurrency;
-
-const savedStartDate = localStorage.getItem('budgetStartDate');
-const savedEndDate = localStorage.getItem('budgetEndDate');
-
-// Filter state
-let filterState = {
-  expenses: 'all',
-  bills: 'all',
-  savings: 'all',
-  debt: 'all'
-};
-
-// Save data to browser storage for current month
-function saveData() {
-  const monthKey = getCurrentMonthKey();
-  localStorage.setItem(monthKey, JSON.stringify(data));
-  localStorage.setItem('budgetCurrency', currency);
+// Load data from Supabase
+async function loadMonthDataFromSupabase() {
+  if (!currentUser) return;
   
-  const startDateEl = document.getElementById('startDate');
-  const endDateEl = document.getElementById('endDate');
-  
-  if (startDateEl) localStorage.setItem('budgetStartDate', startDateEl.value);
-  if (endDateEl) localStorage.setItem('budgetEndDate', endDateEl.value);
-  
-  // Add to saved months list
-  const savedMonths = getSavedMonths();
-  if (!savedMonths.includes(monthKey)) {
-    savedMonths.push(monthKey);
-    localStorage.setItem('savedMonthsList', JSON.stringify(savedMonths));
-  }
-  
-  // Show save confirmation
-  const saveIndicator = document.getElementById('saveIndicator');
-  if (saveIndicator) {
-    saveIndicator.style.display = 'block';
-    setTimeout(() => {
-      saveIndicator.style.display = 'none';
-    }, 1000);
+  try {
+    const monthKey = getCurrentMonthKey();
+    
+    const { data: budgetData, error } = await supabase
+      .from('budgets')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('month_key', monthKey)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    if (budgetData && budgetData.data) {
+      data = budgetData.data;
+    } else {
+      data = getDefaultData();
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    data = getDefaultData();
   }
 }
 
-// Get list of all saved months
-function getSavedMonths() {
-  const saved = localStorage.getItem('savedMonthsList');
-  return saved ? JSON.parse(saved) : [];
+// Save data to Supabase
+async function saveDataToSupabase() {
+  if (!currentUser) return;
+  
+  try {
+    const monthKey = getCurrentMonthKey();
+    
+    const { error } = await supabase
+      .from('budgets')
+      .upsert({
+        user_id: currentUser.id,
+        month_key: monthKey,
+        data: data,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,month_key'
+      });
+
+    if (error) throw error;
+    
+    // Show save confirmation
+    const saveIndicator = document.getElementById('saveIndicator');
+    if (saveIndicator) {
+      saveIndicator.style.display = 'block';
+      setTimeout(() => {
+        saveIndicator.style.display = 'none';
+      }, 1000);
+    }
+  } catch (error) {
+    console.error('Error saving data:', error);
+    alert('Failed to save data. Please try again.');
+  }
+}
+
+// Get list of saved months from Supabase
+async function getSavedMonthsFromSupabase() {
+  if (!currentUser) return [];
+  
+  try {
+    const { data: budgets, error } = await supabase
+      .from('budgets')
+      .select('month_key, data, updated_at')
+      .eq('user_id', currentUser.id)
+      .order('month_key', { ascending: false });
+
+    if (error) throw error;
+    
+    return budgets || [];
+  } catch (error) {
+    console.error('Error fetching saved months:', error);
+    return [];
+  }
 }
 
 // View previous months
-function viewPreviousMonths() {
-  const savedMonths = getSavedMonths();
+async function viewPreviousMonths() {
+  const savedMonths = await getSavedMonthsFromSupabase();
   
   if (savedMonths.length === 0) {
-    alert('No saved months yet! Save your current month first by entering data and changing the date.');
+    alert('No saved months yet! Save your current month first by entering data.');
     return;
   }
   
   let html = '<div style="max-height: 500px; overflow-y: auto;">';
   html += '<h2 style="margin-bottom: 20px;">Saved Monthly Reports</h2>';
   
-  savedMonths.sort().reverse().forEach(monthKey => {
+  savedMonths.forEach(budget => {
+    const monthKey = budget.month_key;
     const parts = monthKey.split('_');
     const year = parts[1];
     const month = parts[2];
@@ -136,7 +331,7 @@ function viewPreviousMonths() {
       "July", "August", "September", "October", "November", "December"];
     const monthName = monthNames[parseInt(month)];
     
-    const monthData = JSON.parse(localStorage.getItem(monthKey));
+    const monthData = budget.data;
     const totalIncome = monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0);
     const totalExpenses = monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0);
     const totalBills = monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0);
@@ -156,8 +351,8 @@ function viewPreviousMonths() {
           <div><strong>Balance:</strong> <span style="color: ${balance >= 0 ? '#10b981' : '#ef4444'}; font-weight: bold;">${currency}${balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
         </div>
         <div style="margin-top: 10px;">
-          <button onclick="loadMonth('${monthKey}')" style="background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Load This Month</button>
-          <button onclick="deleteMonth('${monthKey}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Delete</button>
+          <button onclick="loadMonthFromSupabase('${monthKey}')" style="background: #8b5cf6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Load This Month</button>
+          <button onclick="deleteMonthFromSupabase('${monthKey}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Delete</button>
         </div>
       </div>
     `;
@@ -169,8 +364,8 @@ function viewPreviousMonths() {
 }
 
 // View yearly summary
-function viewYearlySummary() {
-  const savedMonths = getSavedMonths();
+async function viewYearlySummary() {
+  const savedMonths = await getSavedMonthsFromSupabase();
   
   if (savedMonths.length === 0) {
     alert('No saved months yet! Save some months first to see yearly summary.');
@@ -180,7 +375,8 @@ function viewYearlySummary() {
   // Group by year
   const yearData = {};
   
-  savedMonths.forEach(monthKey => {
+  savedMonths.forEach(budget => {
+    const monthKey = budget.month_key;
     const parts = monthKey.split('_');
     const year = parts[1];
     
@@ -195,7 +391,7 @@ function viewYearlySummary() {
       };
     }
     
-    const monthData = JSON.parse(localStorage.getItem(monthKey));
+    const monthData = budget.data;
     yearData[year].income += monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0);
     yearData[year].expenses += monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0);
     yearData[year].bills += monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0);
@@ -250,16 +446,14 @@ function viewYearlySummary() {
 }
 
 // Load a specific month
-function loadMonth(monthKey) {
+async function loadMonthFromSupabase(monthKey) {
+  closeModal();
+  
   const parts = monthKey.split('_');
   const year = parts[1];
   const month = parts[2];
   
-  // Close modal first
-  closeModal();
-  
-  // Wait for modal to close
-  setTimeout(() => {
+  setTimeout(async () => {
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
     
@@ -276,43 +470,57 @@ function loadMonth(monthKey) {
     const endDateObj = new Date(year, parseInt(month) + 1, 0);
     endDateInput.value = `${year}-${String(parseInt(month) + 1).padStart(2, '0')}-${endDateObj.getDate()}`;
     
-    // Load data for this month
-    const monthData = localStorage.getItem(monthKey);
-    if (monthData) {
-      const parsedData = JSON.parse(monthData);
-      
-      // Update data object
-      data.income = parsedData.income || [];
-      data.bills = parsedData.bills || [];
-      data.expenses = parsedData.expenses || [];
-      data.savings = parsedData.savings || [];
-      data.debt = parsedData.debt || [];
-      
-      // Update displays
-      updateMonth();
-      updateAll();
-      
-      alert('Month loaded successfully!');
-    } else {
-      alert('Error: Month data not found.');
-    }
+    // Load data
+    await loadMonthDataFromSupabase();
+    updateMonth();
+    updateAll();
+    
+    alert('Month loaded successfully!');
   }, 100);
 }
 
 // Delete a month
-function deleteMonth(monthKey) {
-  if (confirm('Are you sure you want to delete this month? This cannot be undone!')) {
-    localStorage.removeItem(monthKey);
+async function deleteMonthFromSupabase(monthKey) {
+  if (!confirm('Are you sure you want to delete this month? This cannot be undone!')) {
+    return;
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('budgets')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('month_key', monthKey);
+
+    if (error) throw error;
     
-    // Remove from saved months list
-    const savedMonths = getSavedMonths();
-    const index = savedMonths.indexOf(monthKey);
-    if (index > -1) {
-      savedMonths.splice(index, 1);
-      localStorage.setItem('savedMonthsList', JSON.stringify(savedMonths));
-    }
-    
+    alert('Month deleted successfully!');
     viewPreviousMonths(); // Refresh the view
+  } catch (error) {
+    console.error('Error deleting month:', error);
+    alert('Failed to delete month. Please try again.');
+  }
+}
+
+// Clear all saved data
+async function clearAllData() {
+  if (!confirm('Are you sure you want to clear ALL your budget data? This cannot be undone!')) {
+    return;
+  }
+  
+  try {
+    const { error } = await supabase
+      .from('budgets')
+      .delete()
+      .eq('user_id', currentUser.id);
+
+    if (error) throw error;
+    
+    alert('All data cleared! Refreshing page...');
+    location.reload();
+  } catch (error) {
+    console.error('Error clearing data:', error);
+    alert('Failed to clear data. Please try again.');
   }
 }
 
@@ -343,24 +551,8 @@ function closeModal() {
   }
 }
 
-// Clear all saved data
-function clearAllData() {
-  if (confirm('Are you sure you want to clear ALL data including all saved months? This cannot be undone!')) {
-    const savedMonths = getSavedMonths();
-    savedMonths.forEach(monthKey => {
-      localStorage.removeItem(monthKey);
-    });
-    
-    localStorage.removeItem('savedMonthsList');
-    localStorage.removeItem('budgetCurrency');
-    localStorage.removeItem('budgetStartDate');
-    localStorage.removeItem('budgetEndDate');
-    alert('All data cleared! Refreshing page...');
-    location.reload();
-  }
-}
+// ===== ITEM MANAGEMENT =====
 
-// Add new item
 function addNewItem(category) {
   const itemName = prompt('Enter new item name:');
   if (itemName && itemName.trim() !== '') {
@@ -375,7 +567,6 @@ function addNewItem(category) {
   }
 }
 
-// Edit item name
 function editItemName(category, index) {
   const currentName = data[category][index].name;
   const newName = prompt('Edit item name:', currentName);
@@ -385,7 +576,6 @@ function editItemName(category, index) {
   }
 }
 
-// Delete item
 function deleteItem(category, index) {
   if (confirm(`Are you sure you want to delete "${data[category][index].name}"?`)) {
     data[category].splice(index, 1);
@@ -393,11 +583,12 @@ function deleteItem(category, index) {
   }
 }
 
-// Set filter for a category
 function setFilter(category, filter) {
   filterState[category] = filter;
   updateAll();
 }
+
+// ===== CALCULATION & FORMATTING =====
 
 function formatCurrency(amount) {
   return currency + amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -407,7 +598,7 @@ function calculateTotal(category, field) {
   return data[category].reduce((sum, item) => sum + (item[field] || 0), 0);
 }
 
-function updateMonth() {
+async function updateMonth() {
   const startDateEl = document.getElementById('startDate');
   if (startDateEl && startDateEl.value) {
     const date = new Date(startDateEl.value);
@@ -418,22 +609,13 @@ function updateMonth() {
       monthNameEl.textContent = monthNames[date.getMonth()];
     }
     
-    // Load data for this month if it exists
-    const monthKey = getCurrentMonthKey();
-    const existingData = localStorage.getItem(monthKey);
-    if (existingData) {
-      const monthData = JSON.parse(existingData);
-      data.income = monthData.income || data.income;
-      data.bills = monthData.bills || data.bills;
-      data.expenses = monthData.expenses || data.expenses;
-      data.savings = monthData.savings || data.savings;
-      data.debt = monthData.debt || data.debt;
-    }
+    // Load data for this month
+    await loadMonthDataFromSupabase();
   }
-  saveData();
+  await saveDataToSupabase();
 }
 
-function updateAll() {
+async function updateAll() {
   const currencyEl = document.getElementById('currency');
   if (currencyEl) {
     currency = currencyEl.value;
@@ -496,7 +678,7 @@ function updateAll() {
   renderTable('savings', 'savingsTable', true);
   renderTable('debt', 'debtTable', true);
   
-  saveData();
+  await saveDataToSupabase();
 }
 
 function updateCashFlow(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt) {
@@ -683,22 +865,3 @@ function renderTable(category, tableId, hasProgress) {
   
   tbody.innerHTML = html;
 }
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  // Load month data
-  data = loadMonthData();
-  
-  // Load saved dates on startup
-  const startDateEl = document.getElementById('startDate');
-  const endDateEl = document.getElementById('endDate');
-  const currencyEl = document.getElementById('currency');
-  
-  if (savedStartDate && startDateEl) startDateEl.value = savedStartDate;
-  if (savedEndDate && endDateEl) endDateEl.value = savedEndDate;
-  if (savedCurrency && currencyEl) currencyEl.value = savedCurrency;
-  
-  // Initialize
-  updateMonth();
-  updateAll();
-});
