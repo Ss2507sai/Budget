@@ -70,13 +70,57 @@ function createUserAvatar(email) {
   const initials = email.substring(0, 2).toUpperCase();
   const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
   const colorIndex = email.charCodeAt(0) % colors.length;
+  const color = colors[colorIndex];
   
+  // Set main avatar (in dropdown)
   const avatar = document.getElementById('userAvatar');
   if (avatar) {
     avatar.textContent = initials;
-    avatar.style.backgroundColor = colors[colorIndex];
+    avatar.style.backgroundColor = color;
+  }
+  
+  // Set widget avatar (small one in button)
+  const widgetAvatar = document.getElementById('userAvatarWidget');
+  if (widgetAvatar) {
+    widgetAvatar.textContent = initials;
+    widgetAvatar.style.backgroundColor = color;
   }
 }
+
+// ===== USER MENU DROPDOWN FUNCTIONS =====
+function toggleUserMenu() {
+  const menu = document.getElementById('userDropdownMenu');
+  const btn = document.getElementById('widgetToggleBtn');
+  
+  if (menu && btn) {
+    menu.classList.toggle('show');
+    btn.classList.toggle('active');
+  }
+}
+
+function closeUserMenu() {
+  const menu = document.getElementById('userDropdownMenu');
+  const btn = document.getElementById('widgetToggleBtn');
+  
+  if (menu && btn) {
+    menu.classList.remove('show');
+    btn.classList.remove('active');
+  }
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+  const menu = document.getElementById('userDropdownMenu');
+  const btn = document.getElementById('widgetToggleBtn');
+  
+  if (menu && btn) {
+    const isClickInside = menu.contains(event.target) || btn.contains(event.target);
+    
+    if (!isClickInside && menu.classList.contains('show')) {
+      closeUserMenu();
+    }
+  }
+});
 
 // ===== BUDGET GOALS =====
 function showGoalsModal() {
