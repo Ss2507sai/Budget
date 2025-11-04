@@ -10,21 +10,434 @@ let filterState = {
   savings: 'all',
   debt: 'all'
 };
+let trendsChart = null;
+
+// ===== DARK MODE =====
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', isDark);
+  
+  const icon = document.getElementById('darkModeIcon');
+  const text = document.getElementById('darkModeText');
+  if (icon && text) {
+    icon.textContent = isDark ? '☀️' : '🌙';
+    text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
+  
+  showToast(isDark ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'success');
+  
+  // Redraw charts with new theme
+  if (trendsChart) {
+    updateTrendsChart();
+  }
+}
+
+function loadDarkMode() {
+  const isDark = localStorage.getItem('darkMode') === 'true';
+  if (isDark) {
+    document.body.classList.add('dark-mode');
+    const icon = document.getElementById('darkModeIcon');
+    const text = document.getElementById('darkModeText');
+    if (icon && text) {
+      icon.textContent = '☀️';
+      text.textContent = 'Light Mode';
+    }
+  }
+}
+
+// ===== TOAST NOTIFICATIONS =====
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ===== USER AVATAR =====
+function createUserAvatar(email) {
+  const initials = email.substring(0, 2).toUpperCase();
+  const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  const colorIndex = email.charCodeAt(0) % colors.length;
+  
+  const avatar = document.getElementById('userAvatar');
+  if (avatar) {
+    avatar.textContent = initials;
+    avatar.style.backgroundColor = colors[colorIndex];
+  }
+}
+
+// ===== BUDGET GOALS =====
+function showGoalsModal() {
+  const goals = getUserGoals();
+  
+  let html = `
+    <div style="margin-bottom: 20px;">
+      <h3 style="margin-bottom: 15px;">Set Your Budget Goals 🎯</h3>
+      <button onclick="addNewGoal()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        + Add New Goal
+      </button>
+    </div>
+  `;
+  
+  if (goals.length === 0) {
+    html += '<p style="color: #666; text-align: center; padding: 40px;">No goals yet. Create your first goal to get started!</p>';
+  } else {
+    goals.forEach((goal, index) => {
+      const progress = goal.target > 0 ? (goal.current / goal.target * 100) : 0;
+      const progressColor = progress >= 100 ? '#10b981' : progress >= 75 ? '#3b82f6' : progress >= 50 ? '#f59e0b' : '#ef4444';
+      
+      html += `
+        <div style="background: #f8f5ff; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+            <div>
+              <h4 style="margin: 0 0 5px 0;">${goal.name}</h4>
+              <p style="margin: 0; color: #666; font-size: 14px;">${currency}${goal.current.toLocaleString()} of ${currency}${goal.target.toLocaleString()}</p>
+            </div>
+            <button onclick="deleteGoal(${index})" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Delete</button>
+          </div>
+          <div style="background: #e9d5ff; border-radius: 8px; height: 24px; overflow: hidden;">
+            <div style="background: ${progressColor}; height: 100%; width: ${Math.min(progress, 100)}%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+              ${progress.toFixed(1)}%
+            </div>
+          </div>
+          ${progress >= 100 ? '<p style="margin: 10px 0 0 0; color: #10b981; font-weight: bold;">🎉 Goal Achieved!</p>' : ''}
+        </div>
+      `;
+    });
+  }
+  
+  showModal('Budget Goals', html);
+}
+
+function addNewGoal() {
+  const name = prompt('Goal name (e.g., "Save for vacation"):');
+  if (!name) return;
+  
+  const target = parseFloat(prompt('Target amount:'));
+  if (isNaN(target) || target <= 0) {
+    showToast('Invalid target amount', 'error');
+    return;
+  }
+  
+  const goals = getUserGoals();
+  goals.push({
+    name: name.trim(),
+    target: target,
+    current: 0,
+    createdAt: new Date().toISOString()
+  });
+  
+  saveUserGoals(goals);
+  showToast('Goal added successfully! 🎯', 'success');
+  showGoalsModal();
+}
+
+function deleteGoal(index) {
+  if (!confirm('Delete this goal?')) return;
+  
+  const goals = getUserGoals();
+  goals.splice(index, 1);
+  saveUserGoals(goals);
+  showToast('Goal deleted', 'info');
+  showGoalsModal();
+}
+
+function getUserGoals() {
+  if (!currentUser) return [];
+  const key = getUserStorageKey('goals');
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : [];
+}
+
+function saveUserGoals(goals) {
+  if (!currentUser) return;
+  const key = getUserStorageKey('goals');
+  localStorage.setItem(key, JSON.stringify(goals));
+}
+
+function updateGoalsDisplay() {
+  const goals = getUserGoals();
+  const goalsSection = document.getElementById('goalsSection');
+  const goalsContainer = document.getElementById('goalsContainer');
+  
+  if (!goalsSection || !goalsContainer) return;
+  
+  if (goals.length === 0) {
+    goalsSection.style.display = 'none';
+    return;
+  }
+  
+  goalsSection.style.display = 'block';
+  
+  // Update current amounts based on savings
+  const totalSavings = calculateTotal('savings', 'actual');
+  goals.forEach(goal => {
+    goal.current = Math.min(totalSavings, goal.target);
+  });
+  saveUserGoals(goals);
+  
+  let html = '';
+  goals.forEach((goal, index) => {
+    const progress = goal.target > 0 ? (goal.current / goal.target * 100) : 0;
+    const progressColor = progress >= 100 ? '#10b981' : progress >= 75 ? '#3b82f6' : progress >= 50 ? '#f59e0b' : '#ef4444';
+    
+    html += `
+      <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 2px solid #e9d5ff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong>${goal.name}</strong>
+          <span style="font-size: 14px; color: #666;">${currency}${goal.current.toLocaleString()} / ${currency}${goal.target.toLocaleString()}</span>
+        </div>
+        <div style="background: #e9d5ff; border-radius: 8px; height: 20px; overflow: hidden;">
+          <div style="background: ${progressColor}; height: 100%; width: ${Math.min(progress, 100)}%; transition: width 0.3s; display: flex; align-items: center; padding-left: 8px; color: white; font-weight: bold; font-size: 11px;">
+            ${progress.toFixed(0)}%
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  goalsContainer.innerHTML = html;
+}
+
+// ===== SPENDING TRENDS CHART =====
+function updateTrendsChart() {
+  const canvas = document.getElementById('trendsChart');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const savedMonths = getSavedMonths();
+  
+  if (savedMonths.length === 0) {
+    canvas.style.display = 'none';
+    return;
+  }
+  
+  canvas.style.display = 'block';
+  
+  // Get last 6 months of data
+  const monthsData = savedMonths.sort().slice(-6).map(monthKey => {
+    const parts = monthKey.split('_');
+    const year = parts[1];
+    const month = parts[2];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    const storageKey = getUserStorageKey(monthKey);
+    const monthData = JSON.parse(localStorage.getItem(storageKey));
+    
+    if (!monthData) return null;
+    
+    return {
+      label: `${monthNames[parseInt(month)]} ${year}`,
+      income: monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0),
+      expenses: monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0),
+      bills: monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0),
+      savings: monthData.savings.reduce((sum, item) => sum + (item.actual || 0), 0)
+    };
+  }).filter(d => d !== null);
+  
+  if (trendsChart) {
+    trendsChart.destroy();
+  }
+  
+  const isDark = document.body.classList.contains('dark-mode');
+  const textColor = isDark ? '#e5e7eb' : '#333';
+  const gridColor = isDark ? '#374151' : '#e5e7eb';
+  
+  trendsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: monthsData.map(d => d.label),
+      datasets: [
+        {
+          label: 'Income',
+          data: monthsData.map(d => d.income),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Expenses',
+          data: monthsData.map(d => d.expenses),
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Bills',
+          data: monthsData.map(d => d.bills),
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Savings',
+          data: monthsData.map(d => d.savings),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: textColor,
+            callback: function(value) {
+              return currency + value.toLocaleString();
+            }
+          },
+          grid: {
+            color: gridColor
+          }
+        },
+        x: {
+          ticks: {
+            color: textColor
+          },
+          grid: {
+            color: gridColor
+          }
+        }
+      }
+    }
+  });
+}
+
+// ===== EXPORT TO PDF =====
+function exportToPDF() {
+  showToast('Generating PDF...', 'info');
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text('Budget Report', 105, 20, { align: 'center' });
+    
+    // User info
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    doc.text(`User: ${currentUser.email}`, 20, 35);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 42);
+    doc.text(`Period: ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`, 20, 49);
+    
+    // Summary
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Financial Summary', 20, 60);
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    
+    const totalIncome = calculateTotal('income', 'actual');
+    const totalExpenses = calculateTotal('expenses', 'actual');
+    const totalBills = calculateTotal('bills', 'actual');
+    const totalSavings = calculateTotal('savings', 'actual');
+    const totalDebt = calculateTotal('debt', 'actual');
+    const balance = totalIncome - totalExpenses - totalBills - totalSavings - totalDebt;
+    
+    let yPos = 70;
+    doc.text(`Income: ${formatCurrency(totalIncome)}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Expenses: ${formatCurrency(totalExpenses)}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Bills: ${formatCurrency(totalBills)}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Savings: ${formatCurrency(totalSavings)}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Debt: ${formatCurrency(totalDebt)}`, 20, yPos);
+    yPos += 7;
+    doc.setFont(undefined, 'bold');
+    doc.text(`Balance: ${formatCurrency(balance)}`, 20, yPos);
+    
+    // Income details
+    yPos += 15;
+    doc.setFontSize(14);
+    doc.text('Income Details', 20, yPos);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    yPos += 7;
+    
+    data.income.forEach(item => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(`${item.name}: ${formatCurrency(item.actual)}`, 25, yPos);
+      yPos += 6;
+    });
+    
+    // Expenses details
+    yPos += 10;
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Expenses Details', 20, yPos);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    yPos += 7;
+    
+    data.expenses.forEach(item => {
+      if (item.actual > 0) {
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.text(`${item.name}: ${formatCurrency(item.actual)}`, 25, yPos);
+        yPos += 6;
+      }
+    });
+    
+    // Save PDF
+    const monthName = document.getElementById('monthName').textContent;
+    doc.save(`Budget_Report_${monthName}_${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    showToast('✅ PDF exported successfully!', 'success');
+  } catch (error) {
+    console.error('Error exporting PDF:', error);
+    showToast('❌ Failed to export PDF', 'error');
+  }
+}
 
 // ===== USER MANAGEMENT =====
 
-// Get all registered users
 function getUsers() {
   const users = localStorage.getItem('budget_users');
   return users ? JSON.parse(users) : {};
 }
 
-// Save users
 function saveUsers(users) {
   localStorage.setItem('budget_users', JSON.stringify(users));
 }
 
-// Check if user is logged in
 function checkAuth() {
   const loggedInUser = sessionStorage.getItem('currentUser');
   
@@ -36,27 +449,32 @@ function checkAuth() {
   }
 }
 
-// Show authentication screen
 function showAuthScreen() {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('mainDashboard').style.display = 'none';
 }
 
-// Show dashboard
 function showDashboard() {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('mainDashboard').style.display = 'block';
   document.getElementById('userEmailDisplay').textContent = currentUser.email;
   
+  // Create user avatar
+  createUserAvatar(currentUser.email);
+  
+  // Load dark mode preference
+  loadDarkMode();
+  
   // Load user's budget data
   loadMonthData();
   updateMonth();
   updateAll();
+  updateTrendsChart();
+  updateGoalsDisplay();
 }
 
-// Handle login/signup form
 document.addEventListener('DOMContentLoaded', function() {
   const authForm = document.getElementById('authForm');
   const toggleAuth = document.getElementById('toggleAuth');
@@ -90,7 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
           const users = getUsers();
 
           if (isLoginMode) {
-            // LOGIN
             if (!users[email]) {
               showError('Account not found. Please sign up first.');
               submitBtn.disabled = false;
@@ -105,13 +522,12 @@ document.addEventListener('DOMContentLoaded', function() {
               return;
             }
 
-            // Success - login
             currentUser = { email: email };
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             showDashboard();
+            showToast(`Welcome back, ${email}! 👋`, 'success');
 
           } else {
-            // SIGNUP
             if (users[email]) {
               showError('Account already exists. Please login instead.');
               submitBtn.disabled = false;
@@ -119,7 +535,6 @@ document.addEventListener('DOMContentLoaded', function() {
               return;
             }
 
-            // Create new user
             users[email] = {
               password: password,
               createdAt: new Date().toISOString()
@@ -175,20 +590,18 @@ document.addEventListener('DOMContentLoaded', function() {
     hideMessages();
   }
 
-  // Check auth on load
   checkAuth();
 });
 
-// Handle logout
 function handleLogout() {
   sessionStorage.removeItem('currentUser');
   currentUser = null;
   showAuthScreen();
   document.getElementById('email').value = '';
   document.getElementById('password').value = '';
+  showToast('Logged out successfully', 'info');
 }
 
-// Show error message
 function showError(message) {
   const errorEl = document.getElementById('errorMessage');
   errorEl.textContent = message;
@@ -196,7 +609,6 @@ function showError(message) {
   document.getElementById('successMessage').style.display = 'none';
 }
 
-// Show success message
 function showSuccess(message) {
   const successEl = document.getElementById('successMessage');
   successEl.textContent = message;
@@ -204,13 +616,12 @@ function showSuccess(message) {
   document.getElementById('errorMessage').style.display = 'none';
 }
 
-// Hide messages
 function hideMessages() {
   document.getElementById('errorMessage').style.display = 'none';
   document.getElementById('successMessage').style.display = 'none';
 }
 
-// ===== DATA MANAGEMENT (User-specific) =====
+// ===== DATA MANAGEMENT =====
 
 function getUserStorageKey(key) {
   return `user_${currentUser.email}_${key}`;
@@ -284,7 +695,6 @@ function getDefaultData() {
   };
 }
 
-// Save data (user-specific)
 function saveData() {
   if (!currentUser) return;
   
@@ -292,7 +702,6 @@ function saveData() {
   const storageKey = getUserStorageKey(monthKey);
   localStorage.setItem(storageKey, JSON.stringify(data));
   
-  // Save to user's months list
   const monthsListKey = getUserStorageKey('savedMonthsList');
   let savedMonths = localStorage.getItem(monthsListKey);
   savedMonths = savedMonths ? JSON.parse(savedMonths) : [];
@@ -302,20 +711,10 @@ function saveData() {
     localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
   }
   
-  // Save currency preference
   localStorage.setItem(getUserStorageKey('currency'), currency);
-  
-  // Show save confirmation
-  const saveIndicator = document.getElementById('saveIndicator');
-  if (saveIndicator) {
-    saveIndicator.style.display = 'block';
-    setTimeout(() => {
-      saveIndicator.style.display = 'none';
-    }, 1000);
-  }
+  showToast('💾 Saved successfully', 'success');
 }
 
-// Get saved months (user-specific)
 function getSavedMonths() {
   if (!currentUser) return [];
   
@@ -324,12 +723,11 @@ function getSavedMonths() {
   return saved ? JSON.parse(saved) : [];
 }
 
-// View previous months
 function viewPreviousMonths() {
   const savedMonths = getSavedMonths();
   
   if (savedMonths.length === 0) {
-    alert('No saved months yet! Save your current month first by entering data and changing the date.');
+    showToast('No saved months yet!', 'info');
     return;
   }
   
@@ -380,16 +778,14 @@ function viewPreviousMonths() {
   showModal('Previous Months', html);
 }
 
-// View yearly summary
 function viewYearlySummary() {
   const savedMonths = getSavedMonths();
   
   if (savedMonths.length === 0) {
-    alert('No saved months yet! Save some months first to see yearly summary.');
+    showToast('No saved months yet!', 'info');
     return;
   }
   
-  // Group by year
   const yearData = {};
   
   savedMonths.forEach(monthKey => {
@@ -465,7 +861,6 @@ function viewYearlySummary() {
   showModal('Yearly Summary', html);
 }
 
-// Load a specific month
 function loadMonth(monthKey) {
   const parts = monthKey.split('_');
   const year = parts[1];
@@ -478,7 +873,7 @@ function loadMonth(monthKey) {
     const endDateInput = document.getElementById('endDate');
     
     if (!startDateInput || !endDateInput) {
-      alert('Error: Could not find date inputs. Please refresh the page.');
+      showToast('Error loading month', 'error');
       return;
     }
     
@@ -502,33 +897,34 @@ function loadMonth(monthKey) {
       updateMonth();
       updateAll();
       
-      alert('Month loaded successfully!');
+      showToast('Month loaded successfully!', 'success');
     } else {
-      alert('Error: Month data not found.');
+      showToast('Error: Month data not found', 'error');
     }
   }, 100);
 }
 
-// Delete a month
 function deleteMonth(monthKey) {
-  if (confirm('Are you sure you want to delete this month? This cannot be undone!')) {
-    const storageKey = getUserStorageKey(monthKey);
-    localStorage.removeItem(storageKey);
-    
-    const monthsListKey = getUserStorageKey('savedMonthsList');
-    const savedMonths = getSavedMonths();
-    const index = savedMonths.indexOf(monthKey);
-    
-    if (index > -1) {
-      savedMonths.splice(index, 1);
-      localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
-    }
-    
-    viewPreviousMonths();
+  if (!confirm('Are you sure you want to delete this month? This cannot be undone!')) {
+    return;
   }
+  
+  const storageKey = getUserStorageKey(monthKey);
+  localStorage.removeItem(storageKey);
+  
+  const monthsListKey = getUserStorageKey('savedMonthsList');
+  const savedMonths = getSavedMonths();
+  const index = savedMonths.indexOf(monthKey);
+  
+  if (index > -1) {
+    savedMonths.splice(index, 1);
+    localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
+  }
+  
+  showToast('Month deleted', 'success');
+  viewPreviousMonths();
 }
 
-// Clear all saved data for current user
 function clearAllData() {
   if (!confirm('Are you sure you want to clear ALL your budget data? This cannot be undone!')) {
     return;
@@ -542,12 +938,12 @@ function clearAllData() {
   
   localStorage.removeItem(getUserStorageKey('savedMonthsList'));
   localStorage.removeItem(getUserStorageKey('currency'));
+  localStorage.removeItem(getUserStorageKey('goals'));
   
-  alert('All data cleared! Refreshing page...');
-  location.reload();
+  showToast('All data cleared! Refreshing...', 'info');
+  setTimeout(() => location.reload(), 1500);
 }
 
-// Show modal
 function showModal(title, content) {
   const modal = document.createElement('div');
   modal.id = 'customModal';
@@ -566,7 +962,6 @@ function showModal(title, content) {
   document.body.appendChild(modal);
 }
 
-// Close modal
 function closeModal() {
   const modal = document.getElementById('customModal');
   if (modal) {
@@ -587,6 +982,7 @@ function addNewItem(category) {
     };
     data[category].push(newItem);
     updateAll();
+    showToast(`Added: ${itemName}`, 'success');
   }
 }
 
@@ -596,13 +992,16 @@ function editItemName(category, index) {
   if (newName && newName.trim() !== '') {
     data[category][index].name = newName.trim();
     updateAll();
+    showToast('Item updated', 'success');
   }
 }
 
 function deleteItem(category, index) {
   if (confirm(`Are you sure you want to delete "${data[category][index].name}"?`)) {
+    const itemName = data[category][index].name;
     data[category].splice(index, 1);
     updateAll();
+    showToast(`Deleted: ${itemName}`, 'info');
   }
 }
 
@@ -700,6 +1099,9 @@ function updateAll() {
   renderTable('savings', 'savingsTable', true);
   renderTable('debt', 'debtTable', true);
   
+  updateTrendsChart();
+  updateGoalsDisplay();
+  
   saveData();
 }
 
@@ -775,7 +1177,7 @@ function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, to
       
       svgPaths += `
         <path d="M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z"
-          fill="${cat.color}" stroke="white" stroke-width="2">
+          fill="${cat.color}" stroke="white" stroke-width="2" style="transition: all 0.3s;">
           <title>${cat.name}: ${formatCurrency(cat.value)} (${percentage.toFixed(1)}%)</title>
         </path>
       `;
