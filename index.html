@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Dashboard</title>
     <link rel="stylesheet" href="./style.css">
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js for trends -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- jsPDF for export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-spinner"></div>
@@ -42,28 +48,41 @@
         </div>
     </div>
 
-    <!-- Main Dashboard (hidden until logged in) -->
+    <!-- Main Dashboard -->
     <div id="mainDashboard" style="display: none;">
         <div class="container">
             <!-- User Info & Control buttons -->
             <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
                 <div class="user-info-card">
-                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #666;">Logged in as:</p>
-                    <p style="margin: 0 0 10px 0; font-weight: 600; font-size: 13px; color: #333;" id="userEmailDisplay"></p>
-                    <button onclick="handleLogout()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; margin-bottom: 10px;">
+                    <!-- User Avatar -->
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div id="userAvatar" class="user-avatar"></div>
+                        <div>
+                            <p style="margin: 0; font-size: 11px; color: #666;">Logged in as:</p>
+                            <p style="margin: 0; font-weight: 600; font-size: 13px; color: #333;" id="userEmailDisplay"></p>
+                        </div>
+                    </div>
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="btn-dark-mode" title="Toggle Dark Mode">
+                        <span id="darkModeIcon">🌙</span> <span id="darkModeText">Dark Mode</span>
+                    </button>
+                    <button onclick="handleLogout()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; margin-top: 8px;">
                         Logout
                     </button>
                 </div>
-                <div id="saveIndicator" style="display: none; background: #4ade80; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 10px;">
-                    ✓ Saved!
-                </div>
-                <button onclick="clearAllData()" style="margin-bottom: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                <button onclick="exportToPDF()" style="margin-top: 10px; background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    📥 Export PDF
+                </button>
+                <button onclick="showGoalsModal()" style="margin-top: 10px; background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    🎯 Budget Goals
+                </button>
+                <button onclick="clearAllData()" style="margin-top: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
                     Clear All Data
                 </button>
-                <button onclick="viewPreviousMonths()" style="margin-bottom: 10px; background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    📅 View Previous Months
+                <button onclick="viewPreviousMonths()" style="margin-top: 10px; background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    📅 Previous Months
                 </button>
-                <button onclick="viewYearlySummary()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                <button onclick="viewYearlySummary()" style="margin-top: 10px; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
                     📊 Yearly Summary
                 </button>
             </div>
@@ -93,28 +112,40 @@
                     </select>
                 </div>
             </div>
+
+            <!-- Budget Goals Section -->
+            <div id="goalsSection" class="goals-section" style="display: none;">
+                <h3>🎯 Your Budget Goals</h3>
+                <div id="goalsContainer"></div>
+            </div>
             
             <div class="summary-cards">
                 <div class="summary-card">
-                    <div class="label">INCOME</div>
+                    <div class="label">💰 INCOME</div>
                     <div class="amount" id="summaryIncome">₹10,600.00</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">EXPENSES</div>
+                    <div class="label">🛍️ EXPENSES</div>
                     <div class="amount" id="summaryExpenses">₹0.00</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">BILLS</div>
+                    <div class="label">📄 BILLS</div>
                     <div class="amount" id="summaryBills">₹2,828.50</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">SAVINGS</div>
+                    <div class="label">💵 SAVINGS</div>
                     <div class="amount" id="summarySavings">₹4,570.00</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">DEBT</div>
+                    <div class="label">💳 DEBT</div>
                     <div class="amount" id="summaryDebt">₹855.00</div>
                 </div>
+            </div>
+
+            <!-- Spending Trends Chart -->
+            <div class="dashboard-card white" style="margin-bottom: 25px; padding: 30px;">
+                <h3>📈 SPENDING TRENDS (Last 6 Months)</h3>
+                <canvas id="trendsChart" style="max-height: 300px;"></canvas>
             </div>
             
             <div class="dashboard-row">
@@ -192,7 +223,7 @@
             
             <div class="category-tables">
                 <div class="category-card">
-                    <h3>INCOME</h3>
+                    <h3>💰 INCOME</h3>
                     <table class="category-table">
                         <thead>
                             <tr>
@@ -207,7 +238,7 @@
                 </div>
                 
                 <div class="category-card">
-                    <h3>BILLS</h3>
+                    <h3>📄 BILLS</h3>
                     <table class="category-table">
                         <thead>
                             <tr>
@@ -225,7 +256,7 @@
             
             <div class="category-tables">
                 <div class="category-card">
-                    <h3>EXPENSES</h3>
+                    <h3>🛍️ EXPENSES</h3>
                     <table class="category-table">
                         <thead>
                             <tr>
@@ -241,7 +272,7 @@
                 </div>
                 
                 <div class="category-card">
-                    <h3>SAVINGS</h3>
+                    <h3>💵 SAVINGS</h3>
                     <table class="category-table">
                         <thead>
                             <tr>
@@ -259,7 +290,7 @@
             
             <div class="category-tables">
                 <div class="category-card">
-                    <h3>DEBT</h3>
+                    <h3>💳 DEBT</h3>
                     <table class="category-table">
                         <thead>
                             <tr>
