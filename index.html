@@ -50,43 +50,76 @@
 
     <!-- Main Dashboard -->
     <div id="mainDashboard" style="display: none;">
-        <div class="container">
-            <!-- User Info & Control buttons -->
-            <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-                <div class="user-info-card">
-                    <!-- User Avatar -->
+        <!-- User Menu Widget - Floating Dropdown Button -->
+        <div class="user-widget-container">
+            <!-- Main Floating Button -->
+            <button class="widget-toggle-btn" onclick="toggleUserMenu()" id="widgetToggleBtn">
+                <span id="userAvatarWidget" class="user-avatar-small"></span>
+                <span class="widget-arrow">▼</span>
+            </button>
+
+            <!-- Dropdown Menu (Hidden by default) -->
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+                <!-- User Info Section -->
+                <div class="dropdown-header">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                         <div id="userAvatar" class="user-avatar"></div>
-                        <div>
+                        <div style="flex: 1;">
                             <p style="margin: 0; font-size: 11px; color: #666;">Logged in as:</p>
-                            <p style="margin: 0; font-weight: 600; font-size: 13px; color: #333;" id="userEmailDisplay"></p>
+                            <p style="margin: 0; font-weight: 600; font-size: 13px; color: #333; word-break: break-all;" id="userEmailDisplay"></p>
                         </div>
                     </div>
+                    
                     <!-- Dark Mode Toggle -->
-                    <button onclick="toggleDarkMode()" class="btn-dark-mode" title="Toggle Dark Mode">
-                        <span id="darkModeIcon">🌙</span> <span id="darkModeText">Dark Mode</span>
-                    </button>
-                    <button onclick="handleLogout()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; margin-top: 8px;">
-                        Logout
+                    <button onclick="toggleDarkMode()" class="menu-item-btn dark-mode-btn">
+                        <span id="darkModeIcon">🌙</span>
+                        <span id="darkModeText">Dark Mode</span>
                     </button>
                 </div>
-                <button onclick="exportToPDF()" style="margin-top: 10px; background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    📥 Export PDF
-                </button>
-                <button onclick="showGoalsModal()" style="margin-top: 10px; background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    🎯 Budget Goals
-                </button>
-                <button onclick="clearAllData()" style="margin-top: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    Clear All Data
-                </button>
-                <button onclick="viewPreviousMonths()" style="margin-top: 10px; background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    📅 Previous Months
-                </button>
-                <button onclick="viewYearlySummary()" style="margin-top: 10px; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-                    📊 Yearly Summary
+
+                <!-- Divider -->
+                <div class="menu-divider"></div>
+
+                <!-- Action Buttons -->
+                <div class="dropdown-actions">
+                    <button onclick="exportToPDF(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📥</span>
+                        <span>Export PDF</span>
+                    </button>
+
+                    <button onclick="showGoalsModal(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">🎯</span>
+                        <span>Budget Goals</span>
+                    </button>
+
+                    <button onclick="viewPreviousMonths(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📅</span>
+                        <span>Previous Months</span>
+                    </button>
+
+                    <button onclick="viewYearlySummary(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📊</span>
+                        <span>Yearly Summary</span>
+                    </button>
+
+                    <button onclick="clearAllData(); closeUserMenu();" class="menu-item-btn danger-btn">
+                        <span class="btn-icon">🗑️</span>
+                        <span>Clear All Data</span>
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="menu-divider"></div>
+
+                <!-- Logout Button -->
+                <button onclick="handleLogout()" class="menu-item-btn logout-btn">
+                    <span class="btn-icon">🚪</span>
+                    <span>Logout</span>
                 </button>
             </div>
+        </div>
 
+        <div class="container">
             <div class="header">
                 <h1 id="monthName">October</h1>
                 <div class="subtitle">•BUDGET DASHBOARD•</div>
