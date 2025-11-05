@@ -1325,7 +1325,7 @@ function saveUsers(users) {
 }
 
 function checkAuth() {
-  const loggedInUser = sessionStorage.getItem('currentUser');
+  const loggedInUser = localStorage.getItem('currentUser');
   
   if (loggedInUser) {
     currentUser = JSON.parse(loggedInUser);
@@ -1411,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             currentUser = { email: email };
-            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
             showDashboard();
             showToast(`Welcome back, ${email}! 👋`, 'success');
 
@@ -1482,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function handleLogout() {
-  sessionStorage.removeItem('currentUser');
+  localStorage.removeItem('currentUser');
   currentUser = null;
   showAuthScreen();
   document.getElementById('email').value = '';
