@@ -1,4 +1,4 @@
-// ===== ENHANCED BUDGET DASHBOARD - COMPLETE VERSION WITH ALL 10 FEATURES =====
+// ===== ENHANCED BUDGET DASHBOARD - COMPLETE VERSION WITH ALL FEATURES =====
 
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
@@ -379,7 +379,7 @@ function updateMobileAvatar() {
   }
 }
 
-// ===== FEATURE #6: EXPENSE CATEGORIES & TAGS =====
+// ===== EXPENSE CATEGORIES & TAGS =====
 const EXPENSE_CATEGORIES = {
   needs: { name: 'Needs', color: '#ef4444', icon: '🏠' },
   wants: { name: 'Wants', color: '#f59e0b', icon: '🎮' },
@@ -416,50 +416,7 @@ function initializeCategories() {
   });
 }
 
-function showCategoryBreakdown() {
-  const categoryTotals = {
-    needs: 0,
-    wants: 0,
-    savings: 0,
-    debt: 0
-  };
-  
-  ['expenses', 'bills', 'savings', 'debt'].forEach(category => {
-    data[category].forEach(item => {
-      const cat = item.category || getCategoryForItem(item.name, category);
-      categoryTotals[cat] += item.actual || 0;
-    });
-  });
-  
-  const total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-  
-  let html = '<h3 style="margin-bottom: 20px;">Spending by Category 📊</h3>';
-  html += '<div style="display: grid; gap: 15px;">';
-  
-  Object.keys(EXPENSE_CATEGORIES).forEach(catKey => {
-    const cat = EXPENSE_CATEGORIES[catKey];
-    const amount = categoryTotals[catKey];
-    const percentage = total > 0 ? (amount / total * 100).toFixed(1) : 0;
-    
-    html += `
-      <div style="background: ${cat.color}22; padding: 15px; border-radius: 8px; border-left: 4px solid ${cat.color};">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-weight: bold;">${cat.icon} ${cat.name}</span>
-          <span style="font-weight: bold; color: ${cat.color};">${formatCurrency(amount)}</span>
-        </div>
-        <div style="background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
-          <div style="background: ${cat.color}; height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
-        </div>
-        <div style="text-align: right; margin-top: 4px; font-size: 12px; color: #666;">${percentage}%</div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  showModal('Category Breakdown', html);
-}
-
-// ===== FEATURE #3: RECURRING TRANSACTIONS =====
+// ===== RECURRING TRANSACTIONS =====
 function getRecurringTransactions() {
   if (!currentUser) return [];
   const key = getUserStorageKey('recurring');
@@ -473,7 +430,7 @@ function saveRecurringTransactions(recurring) {
   localStorage.setItem(key, JSON.stringify(recurring));
 }
 
-function showRecurringModal() {
+function showRecurringTransactions() {
   const recurring = getRecurringTransactions();
   
   let html = `
@@ -540,7 +497,7 @@ function addRecurringTransaction() {
   
   saveRecurringTransactions(recurring);
   showToast('Recurring transaction added! 🔄', 'success');
-  showRecurringModal();
+  showRecurringTransactions();
 }
 
 function applyRecurring(index) {
@@ -577,7 +534,7 @@ function applyRecurring(index) {
   
   updateAll();
   showToast(`Applied: ${item.name}`, 'success');
-  showRecurringModal();
+  showRecurringTransactions();
 }
 
 function deleteRecurring(index) {
@@ -587,254 +544,10 @@ function deleteRecurring(index) {
   recurring.splice(index, 1);
   saveRecurringTransactions(recurring);
   showToast('Recurring transaction deleted', 'info');
-  showRecurringModal();
+  showRecurringTransactions();
 }
 
-// ===== FEATURE #2: SMART BUDGET ALERTS =====
-function checkBudgetAlerts() {
-  const alerts = [];
-  
-  ['expenses', 'bills', 'savings', 'debt'].forEach(category => {
-    data[category].forEach(item => {
-      if (item.planned > 0) {
-        const percentage = (item.actual / item.planned) * 100;
-        
-        if (percentage >= 100) {
-          alerts.push({
-            type: 'danger',
-            message: `⚠️ ${item.name}: Over budget! (${percentage.toFixed(0)}%)`,
-            item: item
-          });
-        } else if (percentage >= 80) {
-          alerts.push({
-            type: 'warning',
-            message: `⚡ ${item.name}: Approaching limit (${percentage.toFixed(0)}%)`,
-            item: item
-          });
-        }
-      }
-    });
-  });
-  
-  const totalIncome = calculateTotal('income', 'actual');
-  const totalExpenses = calculateTotal('expenses', 'actual') + calculateTotal('bills', 'actual');
-  const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-  
-  if (expenseRatio > 80) {
-    alerts.push({
-      type: 'danger',
-      message: `🚨 Total expenses are ${expenseRatio.toFixed(0)}% of income!`
-    });
-  }
-  
-  const savingsRate = totalIncome > 0 ? (calculateTotal('savings', 'actual') / totalIncome) * 100 : 0;
-  if (savingsRate < 10 && totalIncome > 0) {
-    alerts.push({
-      type: 'info',
-      message: `💡 Savings rate is ${savingsRate.toFixed(1)}%. Consider saving more!`
-    });
-  }
-  
-  return alerts;
-}
-
-function showAlerts() {
-  const alerts = checkBudgetAlerts();
-  
-  let html = '<h3 style="margin-bottom: 20px;">Budget Alerts 🔔</h3>';
-  
-  if (alerts.length === 0) {
-    html += '<div style="text-align: center; padding: 40px; color: #10b981;"><h2>✅ All Good!</h2><p>Your budget is on track. Keep it up!</p></div>';
-  } else {
-    alerts.forEach(alert => {
-      const bgColor = alert.type === 'danger' ? '#fee' : alert.type === 'warning' ? '#fef3c7' : '#dbeafe';
-      const borderColor = alert.type === 'danger' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6';
-      
-      html += `
-        <div style="background: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
-          ${alert.message}
-        </div>
-      `;
-    });
-  }
-  
-  showModal('Budget Alerts', html);
-}
-
-// ===== FEATURE #1: BUDGET VS ACTUAL COMPARISON CHART =====
-function showComparisonChart() {
-  const categories = ['Income', 'Expenses', 'Bills', 'Savings', 'Debt'];
-  const planned = [
-    calculateTotal('income', 'planned'),
-    calculateTotal('expenses', 'planned'),
-    calculateTotal('bills', 'planned'),
-    calculateTotal('savings', 'planned'),
-    calculateTotal('debt', 'planned')
-  ];
-  const actual = [
-    calculateTotal('income', 'actual'),
-    calculateTotal('expenses', 'actual'),
-    calculateTotal('bills', 'actual'),
-    calculateTotal('savings', 'actual'),
-    calculateTotal('debt', 'actual')
-  ];
-  
-  let html = `
-    <h3 style="margin-bottom: 20px;">Budget vs Actual Comparison 📊</h3>
-    <div id="comparisonChartContainer" style="background: white; padding: 20px; border-radius: 8px;">
-      <canvas id="comparisonChartCanvas"></canvas>
-    </div>
-  `;
-  
-  showModal('Budget Comparison', html);
-  
-  setTimeout(() => {
-    const ctx = document.getElementById('comparisonChartCanvas');
-    if (ctx && window.Chart) {
-      const isDark = document.body.classList.contains('dark-mode');
-      
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: categories,
-          datasets: [
-            {
-              label: 'Planned',
-              data: planned,
-              backgroundColor: 'rgba(139, 92, 246, 0.6)',
-              borderColor: '#8b5cf6',
-              borderWidth: 2
-            },
-            {
-              label: 'Actual',
-              data: actual,
-              backgroundColor: 'rgba(16, 185, 129, 0.6)',
-              borderColor: '#10b981',
-              borderWidth: 2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: {
-                color: isDark ? '#e5e7eb' : '#333'
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return context.dataset.label + ': ' + formatCurrency(context.raw);
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                color: isDark ? '#e5e7eb' : '#333',
-                callback: function(value) {
-                  return currency + value.toLocaleString();
-                }
-              },
-              grid: {
-                color: isDark ? '#374151' : '#e5e7eb'
-              }
-            },
-            x: {
-              ticks: {
-                color: isDark ? '#e5e7eb' : '#333'
-              },
-              grid: {
-                color: isDark ? '#374151' : '#e5e7eb'
-              }
-            }
-          }
-        }
-      });
-    }
-  }, 100);
-}
-
-// ===== FEATURE #4: CSV/EXCEL EXPORT =====
-function exportToCSV() {
-  let csv = 'Category,Item,Planned,Actual,Status\n';
-  
-  const categories = ['income', 'expenses', 'bills', 'savings', 'debt'];
-  
-  categories.forEach(category => {
-    data[category].forEach(item => {
-      const status = item.checked ? 'Paid' : 'Unpaid';
-      csv += `${category},${item.name},${item.planned},${item.actual},${status}\n`;
-    });
-  });
-  
-  csv += `\nSummary\n`;
-  csv += `Total Income,,${calculateTotal('income', 'planned')},${calculateTotal('income', 'actual')}\n`;
-  csv += `Total Expenses,,${calculateTotal('expenses', 'planned')},${calculateTotal('expenses', 'actual')}\n`;
-  csv += `Total Bills,,${calculateTotal('bills', 'planned')},${calculateTotal('bills', 'actual')}\n`;
-  csv += `Total Savings,,${calculateTotal('savings', 'planned')},${calculateTotal('savings', 'actual')}\n`;
-  csv += `Total Debt,,${calculateTotal('debt', 'planned')},${calculateTotal('debt', 'actual')}\n`;
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Budget_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-  
-  showToast('✅ CSV exported successfully!', 'success');
-}
-
-function exportToExcel() {
-  if (typeof XLSX === 'undefined') {
-    showToast('Excel export not available. Please include SheetJS library.', 'error');
-    return;
-  }
-  
-  const wb = XLSX.utils.book_new();
-  
-  const categories = ['income', 'expenses', 'bills', 'savings', 'debt'];
-  
-  categories.forEach(category => {
-    const wsData = [['Item', 'Planned', 'Actual', 'Status']];
-    
-    data[category].forEach(item => {
-      wsData.push([
-        item.name,
-        item.planned,
-        item.actual,
-        item.checked ? 'Paid' : 'Unpaid'
-      ]);
-    });
-    
-    wsData.push([]);
-    wsData.push(['TOTAL', calculateTotal(category, 'planned'), calculateTotal(category, 'actual')]);
-    
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, category.charAt(0).toUpperCase() + category.slice(1));
-  });
-  
-  const summaryData = [
-    ['Category', 'Planned', 'Actual'],
-    ['Income', calculateTotal('income', 'planned'), calculateTotal('income', 'actual')],
-    ['Expenses', calculateTotal('expenses', 'planned'), calculateTotal('expenses', 'actual')],
-    ['Bills', calculateTotal('bills', 'planned'), calculateTotal('bills', 'actual')],
-    ['Savings', calculateTotal('savings', 'planned'), calculateTotal('savings', 'actual')],
-    ['Debt', calculateTotal('debt', 'planned'), calculateTotal('debt', 'actual')]
-  ];
-  
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-  
-  XLSX.writeFile(wb, `Budget_${new Date().toISOString().split('T')[0]}.xlsx`);
-  showToast('✅ Excel exported successfully!', 'success');
-}
-
-// ===== FEATURE #5: MONTH COMPARISON VIEW =====
+// ===== MONTH COMPARISON VIEW =====
 function showMonthComparison() {
   const savedMonths = getSavedMonths();
   
@@ -915,7 +628,7 @@ function showMonthComparison() {
   showModal('Month Comparison', html);
 }
 
-// ===== FEATURE #8: 50/30/20 RULE VISUALIZER =====
+// ===== 50/30/20 RULE VISUALIZER =====
 function show503020Rule() {
   const totalIncome = calculateTotal('income', 'actual');
   
@@ -1004,7 +717,7 @@ function show503020Rule() {
   showModal('50/30/20 Budget Rule', html);
 }
 
-// ===== FEATURE #9: SAVINGS RATE CALCULATOR =====
+// ===== SAVINGS RATE CALCULATOR =====
 function showSavingsRate() {
   const totalIncome = calculateTotal('income', 'actual');
   const totalSavings = calculateTotal('savings', 'actual');
@@ -1082,7 +795,7 @@ function showSavingsRate() {
   showModal('Savings Rate Calculator', html);
 }
 
-// ===== FEATURE #10: DATA BACKUP & RESTORE =====
+// ===== DATA BACKUP & RESTORE =====
 function backupAllData() {
   if (!currentUser) return;
   
@@ -1568,6 +1281,37 @@ function exportToPDF() {
     console.error('Error exporting PDF:', error);
     showToast('❌ Failed to export PDF', 'error');
   }
+}
+
+// ===== CSV/EXCEL EXPORT =====
+function exportToCSV() {
+  let csv = 'Category,Item,Planned,Actual,Status\n';
+  
+  const categories = ['income', 'expenses', 'bills', 'savings', 'debt'];
+  
+  categories.forEach(category => {
+    data[category].forEach(item => {
+      const status = item.checked ? 'Paid' : 'Unpaid';
+      csv += `${category},${item.name},${item.planned},${item.actual},${status}\n`;
+    });
+  });
+  
+  csv += `\nSummary\n`;
+  csv += `Total Income,,${calculateTotal('income', 'planned')},${calculateTotal('income', 'actual')}\n`;
+  csv += `Total Expenses,,${calculateTotal('expenses', 'planned')},${calculateTotal('expenses', 'actual')}\n`;
+  csv += `Total Bills,,${calculateTotal('bills', 'planned')},${calculateTotal('bills', 'actual')}\n`;
+  csv += `Total Savings,,${calculateTotal('savings', 'planned')},${calculateTotal('savings', 'actual')}\n`;
+  csv += `Total Debt,,${calculateTotal('debt', 'planned')},${calculateTotal('debt', 'actual')}\n`;
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Budget_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  
+  showToast('✅ CSV exported successfully!', 'success');
 }
 
 // ===== USER MANAGEMENT =====
