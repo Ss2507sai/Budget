@@ -10,10 +10,10 @@ body {
     padding: 20px;
     min-height: 100vh;
     transition: background 0.3s ease;
-    padding-bottom: 80px; /* Space for mobile nav */
+    padding-bottom: 80px;
 }
 
-/* ===== ALERT BANNER (NEW) ===== */
+/* ===== ALERT BANNER ===== */
 .alert-banner {
     position: fixed;
     top: 0;
@@ -408,7 +408,7 @@ body {
     margin: 8px 0;
 }
 
-/* ===== MOBILE BOTTOM NAVIGATION (NEW) ===== */
+/* ===== MOBILE BOTTOM NAVIGATION ===== */
 .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
@@ -462,7 +462,7 @@ body {
     display: none;
 }
 
-/* ===== MOBILE MENU SECTION (NEW) ===== */
+/* ===== MOBILE MENU SECTION ===== */
 .mobile-menu-section {
     background: white;
     border-radius: 12px;
@@ -565,7 +565,7 @@ body {
     transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* ===== 50/30/20 RULE VISUALIZER (NEW) ===== */
+/* ===== 50/30/20 RULE VISUALIZER ===== */
 .rule-visualizer {
     margin-bottom: 25px;
     padding: 30px !important;
@@ -624,7 +624,7 @@ body {
     margin-top: 10px;
 }
 
-/* ===== SAVINGS RATE CALCULATOR (NEW) ===== */
+/* ===== SAVINGS RATE CALCULATOR ===== */
 .savings-rate-card {
     margin-bottom: 25px;
     padding: 30px !important;
