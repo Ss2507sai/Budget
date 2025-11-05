@@ -1324,9 +1324,8 @@ function saveUsers(users) {
   localStorage.setItem('budget_users', JSON.stringify(users));
 }
 
-// ✅ FIXED: Changed from sessionStorage to localStorage
 function checkAuth() {
-  const loggedInUser = localStorage.getItem('currentUser');
+  const loggedInUser = sessionStorage.getItem('currentUser');
   
   if (loggedInUser) {
     currentUser = JSON.parse(loggedInUser);
@@ -1412,8 +1411,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             currentUser = { email: email };
-            // ✅ FIXED: Changed from sessionStorage to localStorage
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             showDashboard();
             showToast(`Welcome back, ${email}! 👋`, 'success');
 
@@ -1483,9 +1481,8 @@ document.addEventListener('DOMContentLoaded', function() {
   checkAuth();
 });
 
-// ✅ FIXED: Changed from sessionStorage to localStorage
 function handleLogout() {
-  localStorage.removeItem('currentUser');
+  sessionStorage.removeItem('currentUser');
   currentUser = null;
   showAuthScreen();
   document.getElementById('email').value = '';
