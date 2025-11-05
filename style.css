@@ -462,6 +462,10 @@ body {
     display: none;
 }
 
+.desktop-content {
+    display: block;
+}
+
 /* ===== MOBILE MENU SECTION ===== */
 .mobile-menu-section {
     background: white;
@@ -1178,7 +1182,11 @@ body.dark-mode #customModal div {
     }
 
     .mobile-only {
-        display: flex !important;
+        display: block !important;
+    }
+
+    .desktop-content {
+        display: none !important;
     }
 
     .mobile-section {
