@@ -188,8 +188,8 @@
                 </div>
             </div>
 
-            <!-- Mobile Section: Dashboard -->
-            <div class="mobile-section" id="section-dashboard">
+            <!-- Desktop: Always Visible Content -->
+            <div class="desktop-content">
                 
                 <!-- Budget Goals -->
                 <div id="goalsSection" class="goals-section" style="display: none;">
@@ -292,32 +292,29 @@
                         <div class="cash-flow-chart" id="cashFlow"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Mobile Section: Insights -->
-            <div class="mobile-section" id="section-insights" style="display: none;">
-                
-                <!-- Budget vs Actual Chart -->
+                <!-- Charts Section -->
                 <div class="dashboard-card white">
                     <h3>📊 BUDGET VS ACTUAL COMPARISON</h3>
                     <canvas id="budgetComparisonChart"></canvas>
                 </div>
 
-                <!-- Spending Trends -->
-                <div class="dashboard-card white">
-                    <h3>📈 SPENDING TRENDS (Last 6 Months)</h3>
-                    <canvas id="trendsChart"></canvas>
-                </div>
+                <div class="dashboard-row">
+                    <div class="dashboard-card white">
+                        <h3>📈 SPENDING TRENDS (Last 6 Months)</h3>
+                        <canvas id="trendsChart"></canvas>
+                    </div>
 
-                <!-- Pie Chart -->
-                <div class="dashboard-card white">
-                    <h3>BUDGET BREAKDOWN</h3>
-                    <div id="pieChart"></div>
+                    <div class="dashboard-card white">
+                        <h3>BUDGET BREAKDOWN</h3>
+                        <div id="pieChart"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Mobile Section: Categories -->
-            <div class="mobile-section" id="section-categories" style="display: none;">
+            <!-- DETAILED CATEGORY TABLES - Always visible on desktop -->
+            <!-- DETAILED CATEGORY TABLES - Always visible on desktop -->
+            <div class="desktop-category-tables">
                 <div class="category-tables">
                     <div class="category-card">
                         <h3>💰 INCOME</h3>
@@ -400,7 +397,51 @@
                 </div>
             </div>
 
-            <!-- Mobile Section: Menu -->
+            <!-- Mobile Only: Tabbed Navigation Content -->
+            <div class="mobile-only">
+                <!-- Mobile Section: Dashboard -->
+                <div class="mobile-section" id="section-dashboard">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="label">💰 INCOME</div>
+                            <div class="amount" id="summaryIncomeMobile">₹10,600.00</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">🛍️ EXPENSES</div>
+                            <div class="amount" id="summaryExpensesMobile">₹0.00</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">📄 BILLS</div>
+                            <div class="amount" id="summaryBillsMobile">₹2,828.50</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">💵 SAVINGS</div>
+                            <div class="amount" id="summarySavingsMobile">₹4,570.00</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">💳 DEBT</div>
+                            <div class="amount" id="summaryDebtMobile">₹855.00</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card white">
+                        <h3>AMOUNT LEFT TO SPEND</h3>
+                        <div class="amount-left">
+                            <div class="big-amount" id="amountLeftMobile">₹0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Section: Insights -->
+                <div class="mobile-section" id="section-insights" style="display: none;">
+                    <div class="dashboard-card white">
+                        <h3>📊 BUDGET BREAKDOWN</h3>
+                        <div id="pieChartMobile"></div>
+                    </div>
+                </div>
+
+                <!-- Mobile Section: Categories -->
+                <div class="mobile-section" id="section-categories" style="display: none;">
             <div class="mobile-section mobile-menu-section" id="section-menu" style="display: none;">
                 <div class="mobile-menu-header">
                     <div id="userAvatarMobile" class="user-avatar"></div>
