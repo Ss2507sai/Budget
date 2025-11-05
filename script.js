@@ -1948,6 +1948,21 @@ function updateAll() {
   if (summarySavings) summarySavings.textContent = formatCurrency(totalSavings);
   if (summaryDebt) summaryDebt.textContent = formatCurrency(totalDebt);
   
+  // Update mobile summary cards
+  const summaryIncomeMobile = document.getElementById('summaryIncomeMobile');
+  const summaryExpensesMobile = document.getElementById('summaryExpensesMobile');
+  const summaryBillsMobile = document.getElementById('summaryBillsMobile');
+  const summarySavingsMobile = document.getElementById('summarySavingsMobile');
+  const summaryDebtMobile = document.getElementById('summaryDebtMobile');
+  const amountLeftMobile = document.getElementById('amountLeftMobile');
+  
+  if (summaryIncomeMobile) summaryIncomeMobile.textContent = formatCurrency(totalIncome);
+  if (summaryExpensesMobile) summaryExpensesMobile.textContent = formatCurrency(totalExpenses);
+  if (summaryBillsMobile) summaryBillsMobile.textContent = formatCurrency(totalBills);
+  if (summarySavingsMobile) summarySavingsMobile.textContent = formatCurrency(totalSavings);
+  if (summaryDebtMobile) summaryDebtMobile.textContent = formatCurrency(totalDebt);
+  if (amountLeftMobile) amountLeftMobile.textContent = formatCurrency(leftAmount);
+  
   const foIncomePlanned = document.getElementById('foIncomePlanned');
   const foIncomeActual = document.getElementById('foIncomeActual');
   const foExpensesPlanned = document.getElementById('foExpensesPlanned');
@@ -2025,7 +2040,7 @@ function updateCashFlow(totalIncome, totalExpenses, totalBills, totalSavings, to
 
 function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, totalDebt, leftAmount) {
   const pieChartContainer = document.getElementById('pieChart');
-  if (!pieChartContainer) return;
+  const pieChartMobileContainer = document.getElementById('pieChartMobile');
   
   const categories = [
     { name: 'Expenses', value: totalExpenses, color: '#f87171' },
@@ -2037,63 +2052,74 @@ function updatePieChart(totalIncome, totalExpenses, totalBills, totalSavings, to
   
   const total = categories.reduce((sum, cat) => sum + cat.value, 0);
   
-  if (total === 0) {
-    pieChartContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No data to display</div>';
-    return;
+  const generatePieChartHTML = () => {
+    if (total === 0) {
+      return '<div style="text-align: center; padding: 40px; color: #999;">No data to display</div>';
+    }
+    
+    let currentAngle = 0;
+    const centerX = 100;
+    const centerY = 100;
+    const radius = 80;
+    
+    let svgPaths = '';
+    let legends = '';
+    
+    categories.forEach((cat) => {
+      const percentage = (cat.value / total) * 100;
+      if (percentage > 0) {
+        const sliceAngle = (cat.value / total) * 360;
+        const endAngle = currentAngle + sliceAngle;
+        
+        const startX = centerX + radius * Math.cos((currentAngle - 90) * Math.PI / 180);
+        const startY = centerY + radius * Math.sin((currentAngle - 90) * Math.PI / 180);
+        const endX = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180);
+        const endY = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180);
+        
+        const largeArc = sliceAngle > 180 ? 1 : 0;
+        
+        svgPaths += `
+          <path d="M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z"
+            fill="${cat.color}" stroke="white" stroke-width="2" style="transition: all 0.3s;">
+            <title>${cat.name}: ${formatCurrency(cat.value)} (${percentage.toFixed(1)}%)</title>
+          </path>
+        `;
+        
+        legends += `
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 16px; height: 16px; background: ${cat.color}; border-radius: 3px;"></div>
+            <div style="flex: 1; font-size: 12px;">
+              <div style="font-weight: 600;">${cat.name}</div>
+              <div style="color: #666;">${formatCurrency(cat.value)} (${percentage.toFixed(1)}%)</div>
+            </div>
+          </div>
+        `;
+        
+        currentAngle = endAngle;
+      }
+    });
+    
+    return `
+      <div style="display: flex; gap: 30px; align-items: center; justify-content: center;">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          ${svgPaths}
+        </svg>
+        <div style="flex: 1;">
+          ${legends}
+        </div>
+      </div>
+    `;
+  };
+  
+  const chartHTML = generatePieChartHTML();
+  
+  if (pieChartContainer) {
+    pieChartContainer.innerHTML = chartHTML;
   }
   
-  let currentAngle = 0;
-  const centerX = 100;
-  const centerY = 100;
-  const radius = 80;
-  
-  let svgPaths = '';
-  let legends = '';
-  
-  categories.forEach((cat) => {
-    const percentage = (cat.value / total) * 100;
-    if (percentage > 0) {
-      const sliceAngle = (cat.value / total) * 360;
-      const endAngle = currentAngle + sliceAngle;
-      
-      const startX = centerX + radius * Math.cos((currentAngle - 90) * Math.PI / 180);
-      const startY = centerY + radius * Math.sin((currentAngle - 90) * Math.PI / 180);
-      const endX = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180);
-      const endY = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180);
-      
-      const largeArc = sliceAngle > 180 ? 1 : 0;
-      
-      svgPaths += `
-        <path d="M ${centerX} ${centerY} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z"
-          fill="${cat.color}" stroke="white" stroke-width="2" style="transition: all 0.3s;">
-          <title>${cat.name}: ${formatCurrency(cat.value)} (${percentage.toFixed(1)}%)</title>
-        </path>
-      `;
-      
-      legends += `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <div style="width: 16px; height: 16px; background: ${cat.color}; border-radius: 3px;"></div>
-          <div style="flex: 1; font-size: 12px;">
-            <div style="font-weight: 600;">${cat.name}</div>
-            <div style="color: #666;">${formatCurrency(cat.value)} (${percentage.toFixed(1)}%)</div>
-          </div>
-        </div>
-      `;
-      
-      currentAngle = endAngle;
-    }
-  });
-  
-  pieChartContainer.innerHTML = `
-    <div style="display: flex; gap: 30px; align-items: center; justify-content: center;">
-      <svg width="200" height="200" viewBox="0 0 200 200">
-        ${svgPaths}
-      </svg>
-      <div style="flex: 1;">
-        ${legends}
-      </div>
-    </div>
-  `;
+  if (pieChartMobileContainer) {
+    pieChartMobileContainer.innerHTML = chartHTML;
+  }
 }
 
 function renderTable(category, tableId, hasProgress) {
