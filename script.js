@@ -1,4 +1,4 @@
-// ===== ENHANCED BUDGET DASHBOARD - ALL 10 PREMIUM FEATURES =====
+// ===== ENHANCED BUDGET DASHBOARD - COMPLETE VERSION WITH ALL 10 FEATURES =====
 
 // ===== GLOBAL VARIABLES =====
 let currentUser = null;
@@ -13,6 +13,371 @@ let filterState = {
   debt: 'all'
 };
 let trendsChart = null;
+
+// ===== MOBILE NAVIGATION =====
+function showMobileSection(section) {
+  const sections = document.querySelectorAll('.mobile-section');
+  const buttons = document.querySelectorAll('.nav-btn');
+  
+  sections.forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  
+  buttons.forEach(b => b.classList.remove('active'));
+  
+  const targetSection = document.getElementById(`section-${section}`);
+  if (targetSection) {
+    targetSection.classList.add('active');
+    targetSection.style.display = 'block';
+  }
+  
+  const clickedBtn = document.querySelector(`[data-section="${section}"]`);
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+  }
+}
+
+// ===== ALERT BANNER =====
+function closeAlertBanner() {
+  const banner = document.getElementById('alertBanner');
+  if (banner) {
+    banner.style.display = 'none';
+  }
+}
+
+function showAlertBanner(message) {
+  const banner = document.getElementById('alertBanner');
+  const messageEl = document.getElementById('alertMessage');
+  if (banner && messageEl) {
+    messageEl.textContent = message;
+    banner.style.display = 'block';
+    setTimeout(() => closeAlertBanner(), 5000);
+  }
+}
+
+// ===== BACKUP & RESTORE =====
+function showBackupRestore() {
+  let html = `
+    <h3 style="margin-bottom: 20px;">💾 Backup & Restore</h3>
+    <div style="display: grid; gap: 20px;">
+      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+        <h4 style="margin: 0 0 10px 0;">📥 Create Backup</h4>
+        <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Download all your budget data as a JSON file</p>
+        <button onclick="backupAllData(); closeModal();" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
+          Download Backup
+        </button>
+      </div>
+      
+      <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+        <h4 style="margin: 0 0 10px 0;">📤 Restore from Backup</h4>
+        <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Upload a previously saved backup file</p>
+        <button onclick="document.getElementById('restoreFileInput').click(); closeModal();" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
+          Choose Backup File
+        </button>
+      </div>
+    </div>
+  `;
+  
+  showModal('Backup & Restore', html);
+}
+
+function handleRestoreFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      
+      if (!backup.version || !backup.user || !backup.currentData) {
+        showToast('Invalid backup file format', 'error');
+        return;
+      }
+      
+      if (backup.currentData) {
+        data = backup.currentData;
+        saveData();
+      }
+      
+      if (backup.goals) {
+        saveUserGoals(backup.goals);
+      }
+      
+      if (backup.recurring) {
+        saveRecurringTransactions(backup.recurring);
+      }
+      
+      if (backup.months) {
+        Object.keys(backup.months).forEach(monthKey => {
+          const storageKey = getUserStorageKey(monthKey);
+          localStorage.setItem(storageKey, JSON.stringify(backup.months[monthKey]));
+        });
+        
+        const monthsListKey = getUserStorageKey('savedMonthsList');
+        let savedMonths = getSavedMonths();
+        Object.keys(backup.months).forEach(monthKey => {
+          if (!savedMonths.includes(monthKey)) {
+            savedMonths.push(monthKey);
+          }
+        });
+        localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
+      }
+      
+      updateAll();
+      updateTrendsChart();
+      updateGoalsDisplay();
+      
+      showToast('✅ Data restored successfully! Refreshing...', 'success');
+      setTimeout(() => location.reload(), 1500);
+      
+    } catch (error) {
+      console.error('Restore error:', error);
+      showToast('❌ Failed to restore backup. Invalid file.', 'error');
+    }
+  };
+  
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ===== 50/30/20 RULE DISPLAY =====
+function update503020Display() {
+  const container = document.getElementById('rule503020Container');
+  if (!container) return;
+  
+  const totalIncome = calculateTotal('income', 'actual');
+  if (totalIncome === 0) {
+    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Add income data to see your 50/30/20 analysis</p>';
+    return;
+  }
+  
+  const needsActual = data.expenses.filter(e => e.category === 'needs').reduce((sum, e) => sum + (e.actual || 0), 0) +
+                      data.bills.filter(b => b.category === 'needs').reduce((sum, b) => sum + (b.actual || 0), 0);
+  const wantsActual = data.expenses.filter(e => e.category === 'wants').reduce((sum, e) => sum + (e.actual || 0), 0) +
+                      data.bills.filter(b => b.category === 'wants').reduce((sum, b) => sum + (b.actual || 0), 0);
+  const savingsActual = calculateTotal('savings', 'actual');
+  
+  const needsIdeal = totalIncome * 0.50;
+  const wantsIdeal = totalIncome * 0.30;
+  const savingsIdeal = totalIncome * 0.20;
+  
+  const needsPercent = (needsActual / totalIncome * 100).toFixed(1);
+  const wantsPercent = (wantsActual / totalIncome * 100).toFixed(1);
+  const savingsPercent = (savingsActual / totalIncome * 100).toFixed(1);
+  
+  container.innerHTML = `
+    <div class="rule-container">
+      <div class="rule-item">
+        <div class="rule-percentage" style="color: #ef4444;">50%</div>
+        <div class="rule-label">Needs</div>
+        <div class="rule-amount">${formatCurrency(needsActual)}</div>
+        <div class="rule-bar">
+          <div class="rule-bar-fill" style="width: ${Math.min((needsActual / needsIdeal * 100), 100)}%; background: #ef4444;"></div>
+        </div>
+        <div class="rule-status" style="color: ${needsActual <= needsIdeal ? '#10b981' : '#ef4444'};">
+          ${needsPercent}% of income
+        </div>
+      </div>
+      
+      <div class="rule-item">
+        <div class="rule-percentage" style="color: #f59e0b;">30%</div>
+        <div class="rule-label">Wants</div>
+        <div class="rule-amount">${formatCurrency(wantsActual)}</div>
+        <div class="rule-bar">
+          <div class="rule-bar-fill" style="width: ${Math.min((wantsActual / wantsIdeal * 100), 100)}%; background: #f59e0b;"></div>
+        </div>
+        <div class="rule-status" style="color: ${wantsActual <= wantsIdeal ? '#10b981' : '#ef4444'};">
+          ${wantsPercent}% of income
+        </div>
+      </div>
+      
+      <div class="rule-item">
+        <div class="rule-percentage" style="color: #3b82f6;">20%</div>
+        <div class="rule-label">Savings</div>
+        <div class="rule-amount">${formatCurrency(savingsActual)}</div>
+        <div class="rule-bar">
+          <div class="rule-bar-fill" style="width: ${Math.min((savingsActual / savingsIdeal * 100), 100)}%; background: #3b82f6;"></div>
+        </div>
+        <div class="rule-status" style="color: ${savingsActual >= savingsIdeal ? '#10b981' : '#f59e0b'};">
+          ${savingsPercent}% of income
+        </div>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="show503020Rule()" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        View Detailed Analysis
+      </button>
+    </div>
+  `;
+}
+
+// ===== SAVINGS RATE DISPLAY =====
+function updateSavingsRateDisplay() {
+  const container = document.getElementById('savingsRateContainer');
+  if (!container) return;
+  
+  const totalIncome = calculateTotal('income', 'actual');
+  const totalSavings = calculateTotal('savings', 'actual');
+  
+  if (totalIncome === 0) {
+    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Add income data to track your savings rate</p>';
+    return;
+  }
+  
+  const savingsRate = (totalSavings / totalIncome * 100).toFixed(1);
+  const monthlySavings = totalSavings;
+  const annualSavings = monthlySavings * 12;
+  
+  let rateColor = '#ef4444';
+  if (savingsRate >= 20) rateColor = '#10b981';
+  else if (savingsRate >= 10) rateColor = '#f59e0b';
+  
+  container.innerHTML = `
+    <div class="savings-rate-display">
+      <div class="savings-rate-percentage" style="color: ${rateColor};">${savingsRate}%</div>
+      <div class="savings-rate-label">Your Savings Rate</div>
+    </div>
+    <div class="savings-trend">
+      <div class="trend-item">
+        <div class="trend-value">${formatCurrency(monthlySavings)}</div>
+        <div class="trend-label">Monthly</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-value">${formatCurrency(annualSavings)}</div>
+        <div class="trend-label">Annual</div>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="showSavingsRate()" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        View Full Analysis
+      </button>
+    </div>
+  `;
+}
+
+// ===== BUDGET COMPARISON CHART =====
+function updateBudgetComparisonChart() {
+  const canvas = document.getElementById('budgetComparisonChart');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  const categories = ['Income', 'Expenses', 'Bills', 'Savings', 'Debt'];
+  const planned = [
+    calculateTotal('income', 'planned'),
+    calculateTotal('expenses', 'planned'),
+    calculateTotal('bills', 'planned'),
+    calculateTotal('savings', 'planned'),
+    calculateTotal('debt', 'planned')
+  ];
+  const actual = [
+    calculateTotal('income', 'actual'),
+    calculateTotal('expenses', 'actual'),
+    calculateTotal('bills', 'actual'),
+    calculateTotal('savings', 'actual'),
+    calculateTotal('debt', 'actual')
+  ];
+  
+  const isDark = document.body.classList.contains('dark-mode');
+  
+  if (window.budgetComparisonChart) {
+    window.budgetComparisonChart.destroy();
+  }
+  
+  window.budgetComparisonChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: categories,
+      datasets: [
+        {
+          label: 'Planned',
+          data: planned,
+          backgroundColor: 'rgba(139, 92, 246, 0.6)',
+          borderColor: '#8b5cf6',
+          borderWidth: 2
+        },
+        {
+          label: 'Actual',
+          data: actual,
+          backgroundColor: 'rgba(16, 185, 129, 0.6)',
+          borderColor: '#10b981',
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: isDark ? '#e5e7eb' : '#333'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + formatCurrency(context.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: isDark ? '#e5e7eb' : '#333',
+            callback: function(value) {
+              return currency + value.toLocaleString();
+            }
+          },
+          grid: {
+            color: isDark ? '#374151' : '#e5e7eb'
+          }
+        },
+        x: {
+          ticks: {
+            color: isDark ? '#e5e7eb' : '#333'
+          },
+          grid: {
+            color: isDark ? '#374151' : '#e5e7eb'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ===== MOBILE AVATAR UPDATE =====
+function updateMobileAvatar() {
+  if (!currentUser) return;
+  
+  const mobileAvatar = document.getElementById('userAvatarMobile');
+  const mobileEmail = document.getElementById('userEmailDisplayMobile');
+  const darkModeIconMobile = document.getElementById('darkModeIconMobile');
+  const darkModeTextMobile = document.getElementById('darkModeTextMobile');
+  
+  if (mobileAvatar) {
+    const initials = currentUser.email.substring(0, 2).toUpperCase();
+    const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+    const colorIndex = currentUser.email.charCodeAt(0) % colors.length;
+    
+    mobileAvatar.textContent = initials;
+    mobileAvatar.style.backgroundColor = colors[colorIndex];
+  }
+  
+  if (mobileEmail) {
+    mobileEmail.textContent = currentUser.email;
+  }
+  
+  const isDark = document.body.classList.contains('dark-mode');
+  if (darkModeIconMobile && darkModeTextMobile) {
+    darkModeIconMobile.textContent = isDark ? '☀️' : '🌙';
+    darkModeTextMobile.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
+}
 
 // ===== FEATURE #6: EXPENSE CATEGORIES & TAGS =====
 const EXPENSE_CATEGORIES = {
@@ -753,95 +1118,6 @@ function backupAllData() {
   showToast('✅ Backup created successfully!', 'success');
 }
 
-function showRestoreModal() {
-  let html = `
-    <h3 style="margin-bottom: 20px;">Restore Data from Backup 📥</h3>
-    <p style="color: #666; margin-bottom: 20px;">Select a backup file to restore your budget data. This will merge with your existing data.</p>
-    
-    <input type="file" id="restoreFile" accept=".json" style="margin-bottom: 20px; padding: 10px; border: 2px dashed #8b5cf6; border-radius: 8px; width: 100%;">
-    
-    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <strong>⚠️ Important:</strong>
-      <ul style="margin: 10px 0 0 0; padding-left: 20px;">
-        <li>Backup your current data first before restoring</li>
-        <li>The restore will merge data, not replace it</li>
-        <li>Review the restored data carefully</li>
-      </ul>
-    </div>
-    
-    <button onclick="processRestore()" style="background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
-      Restore Backup
-    </button>
-  `;
-  
-  showModal('Restore Backup', html);
-}
-
-function processRestore() {
-  const fileInput = document.getElementById('restoreFile');
-  if (!fileInput || !fileInput.files[0]) {
-    showToast('Please select a backup file', 'error');
-    return;
-  }
-  
-  const file = fileInput.files[0];
-  const reader = new FileReader();
-  
-  reader.onload = function(e) {
-    try {
-      const backup = JSON.parse(e.target.result);
-      
-      if (!backup.version || !backup.user || !backup.currentData) {
-        showToast('Invalid backup file format', 'error');
-        return;
-      }
-      
-      if (backup.currentData) {
-        data = backup.currentData;
-        saveData();
-      }
-      
-      if (backup.goals) {
-        saveUserGoals(backup.goals);
-      }
-      
-      if (backup.recurring) {
-        saveRecurringTransactions(backup.recurring);
-      }
-      
-      if (backup.months) {
-        Object.keys(backup.months).forEach(monthKey => {
-          const storageKey = getUserStorageKey(monthKey);
-          localStorage.setItem(storageKey, JSON.stringify(backup.months[monthKey]));
-        });
-        
-        const monthsListKey = getUserStorageKey('savedMonthsList');
-        let savedMonths = getSavedMonths();
-        Object.keys(backup.months).forEach(monthKey => {
-          if (!savedMonths.includes(monthKey)) {
-            savedMonths.push(monthKey);
-          }
-        });
-        localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
-      }
-      
-      closeModal();
-      updateAll();
-      updateTrendsChart();
-      updateGoalsDisplay();
-      
-      showToast('✅ Data restored successfully! Refreshing...', 'success');
-      setTimeout(() => location.reload(), 1500);
-      
-    } catch (error) {
-      console.error('Restore error:', error);
-      showToast('❌ Failed to restore backup. Invalid file.', 'error');
-    }
-  };
-  
-  reader.readAsText(file);
-}
-
 // ===== DARK MODE =====
 function toggleDarkMode() {
   document.body.classList.toggle('dark-mode');
@@ -855,10 +1131,15 @@ function toggleDarkMode() {
     text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   }
   
+  updateMobileAvatar();
+  
   showToast(isDark ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'success');
   
   if (trendsChart) {
     updateTrendsChart();
+  }
+  if (window.budgetComparisonChart) {
+    updateBudgetComparisonChart();
   }
 }
 
@@ -1323,6 +1604,7 @@ function showDashboard() {
   document.getElementById('userEmailDisplay').textContent = currentUser.email;
   
   createUserAvatar(currentUser.email);
+  updateMobileAvatar();
   loadDarkMode();
   loadMonthData();
   initializeCategories();
@@ -1330,6 +1612,11 @@ function showDashboard() {
   updateAll();
   updateTrendsChart();
   updateGoalsDisplay();
+  update503020Display();
+  updateSavingsRateDisplay();
+  updateBudgetComparisonChart();
+  
+  showMobileSection('dashboard');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1568,7 +1855,6 @@ function saveData() {
   }
   
   localStorage.setItem(getUserStorageKey('currency'), currency);
-  showToast('💾 Saved successfully', 'success');
 }
 
 function getSavedMonths() {
@@ -1956,6 +2242,9 @@ function updateAll() {
   
   updateTrendsChart();
   updateGoalsDisplay();
+  update503020Display();
+  updateSavingsRateDisplay();
+  updateBudgetComparisonChart();
   
   saveData();
 }
