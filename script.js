@@ -1599,31 +1599,6 @@ function saveData() {
   }
   
   localStorage.setItem(getUserStorageKey('currency'), currency);
-  
-  // INSTANT SAVE: Log to confirm auto-save is working
-  console.log('✅ Data auto-saved at:', new Date().toLocaleTimeString());
-}
-
-// AUTO-SAVE: Save data every 2 seconds if there are changes
-let autoSaveInterval = null;
-let dataChanged = false;
-
-function startAutoSave() {
-  if (autoSaveInterval) return; // Already running
-  
-  autoSaveInterval = setInterval(() => {
-    if (dataChanged && currentUser) {
-      saveData();
-      dataChanged = false;
-      showToast('💾 Auto-saved', 'success');
-    }
-  }, 2000); // Save every 2 seconds if data changed
-  
-  console.log('🔄 Auto-save enabled - data will be saved every 2 seconds');
-}
-
-function markDataChanged() {
-  dataChanged = true;
 }
 
 function getSavedMonths() {
@@ -2030,8 +2005,6 @@ function updateAll() {
   updateSavingsRateDisplay();
   updateBudgetComparisonChart();
   
-  // MARK DATA AS CHANGED for auto-save
-  markDataChanged();
   saveData();
 }
 
