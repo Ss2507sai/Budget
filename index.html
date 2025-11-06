@@ -3,167 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Dashboard Pro</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <title>Budget Dashboard Pro - Ultimate Edition</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div id="dashboard" class="dashboard">
-        <div class="top-bar">
-            <div class="user-info">
-                <h1>💰 Budget Dashboard Pro</h1>
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="alertBanner" class="alert-banner" style="display: none;">
+        <div class="alert-content">
+            <span class="alert-icon">⚠️</span>
+            <span class="alert-message" id="alertMessage"></span>
+            <button class="alert-close" onclick="closeAlertBanner()">×</button>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading your dashboard...</p>
+    </div>
+
+    <div id="authScreen" class="auth-screen" style="display: none;">
+        <div class="auth-box">
+            <h1 id="authTitle">Login</h1>
+            <div class="subtitle">•ULTIMATE BUDGET DASHBOARD•</div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" id="authSubmitBtn">Login</button>
+            </form>
+            <div class="toggle-text">
+                <span id="toggleText">Don't have an account?</span>
+                <a href="#" id="toggleAuth">Sign Up</a>
             </div>
-            <div class="month-selector">
-                <button id="prevMonth" class="month-btn">←</button>
-                <span id="currentMonthDisplay"></span>
-                <button id="nextMonth" class="month-btn">→</button>
+        </div>
+    </div>
+
+    <div id="mainDashboard" style="display: none;">
+        <div class="user-widget-container desktop-only">
+            <button class="widget-toggle-btn" onclick="toggleUserMenu()" id="widgetToggleBtn">
+                <span id="userAvatarWidget" class="user-avatar-small"></span>
+                <span class="widget-arrow">▼</span>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdownMenu">
+                <div class="dropdown-header">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <div id="userAvatar" class="user-avatar"></div>
+                        <div style="flex: 1;">
+                            <p style="margin: 0; font-size: 11px; color: #666;">Logged in as:</p>
+                            <p style="margin: 0; font-weight: 600; font-size: 13px; color: #333; word-break: break-all;" id="userEmailDisplay"></p>
+                        </div>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="menu-item-btn dark-mode-btn">
+                        <span id="darkModeIcon">🌙</span>
+                        <span id="darkModeText">Dark Mode</span>
+                    </button>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="dropdown-actions">
+                    <button onclick="exportToPDF(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📥</span><span>Export PDF</span>
+                    </button>
+                    <button onclick="exportToCSV(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📊</span><span>Export CSV</span>
+                    </button>
+                    <button onclick="showBackupRestore(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">💾</span><span>Backup & Restore</span>
+                    </button>
+                    <button onclick="showGoalsModal(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">🎯</span><span>Budget Goals</span>
+                    </button>
+                    <button onclick="showRecurringTransactions(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">🔄</span><span>Recurring Items</span>
+                    </button>
+                    <button onclick="showMonthComparison(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📊</span><span>Compare Months</span>
+                    </button>
+                    <button onclick="viewPreviousMonths(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📅</span><span>Previous Months</span>
+                    </button>
+                    <button onclick="viewYearlySummary(); closeUserMenu();" class="menu-item-btn">
+                        <span class="btn-icon">📈</span><span>Yearly Summary</span>
+                    </button>
+                    <button onclick="clearAllData(); closeUserMenu();" class="menu-item-btn danger-btn">
+                        <span class="btn-icon">🗑️</span><span>Clear All Data</span>
+                    </button>
+                </div>
+                <div class="menu-divider"></div>
+                <button onclick="handleLogout()" class="menu-item-btn logout-btn">
+                    <span class="btn-icon">🚪</span><span>Logout</span>
+                </button>
             </div>
         </div>
 
+        <div class="mobile-bottom-nav mobile-only">
+            <button class="nav-btn active" onclick="showMobileSection('dashboard')" data-section="dashboard">
+                <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
+            </button>
+            <button class="nav-btn" onclick="showMobileSection('insights')" data-section="insights">
+                <span class="nav-icon">📊</span><span class="nav-label">Insights</span>
+            </button>
+            <button class="nav-btn" onclick="showMobileSection('categories')" data-section="categories">
+                <span class="nav-icon">📝</span><span class="nav-label">Details</span>
+            </button>
+            <button class="nav-btn" onclick="showMobileSection('menu')" data-section="menu">
+                <span class="nav-icon">☰</span><span class="nav-label">Menu</span>
+            </button>
+        </div>
+
         <div class="container">
-            <div class="summary-cards">
-                <div class="card summary-card income-card">
-                    <h3>💵 Total Income</h3>
-                    <p class="amount" id="totalIncome">₹0</p>
-                </div>
-                <div class="card summary-card expense-card">
-                    <h3>💸 Total Expenses</h3>
-                    <p class="amount" id="totalExpenses">₹0</p>
-                </div>
-                <div class="card summary-card balance-card">
-                    <h3>💰 Balance</h3>
-                    <p class="amount" id="balance">₹0</p>
-                </div>
-                <div class="card summary-card savings-card">
-                    <h3>🎯 Savings Goal</h3>
-                    <p class="amount" id="savingsProgress">0%</p>
-                </div>
+            <div class="header">
+                <h1 id="monthName">October</h1>
+                <div class="subtitle">•ULTIMATE BUDGET DASHBOARD•</div>
             </div>
-
-            <div class="card section-card">
-                <div class="section-header">
-                    <h2>💵 Income Sources</h2>
-                    <button class="add-btn" onclick="addIncomeRow()">+ Add Income</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Source</th>
-                                <th>Amount</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="incomeTable"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card section-card">
-                <div class="section-header">
-                    <h2>💸 Expenses</h2>
-                    <div class="filter-group">
-                        <select id="expenseFilter" onchange="filterExpenses()">
-                            <option value="all">All Expenses</option>
-                            <option value="paid">Paid</option>
-                            <option value="pending">Pending</option>
-                        </select>
-                        <button class="add-btn" onclick="addExpenseRow()">+ Add Expense</button>
+            
+            <div class="top-controls">
+                <div class="control-group">
+                    <label>BUDGET PERIOD</label>
+                    <div class="date-inputs">
+                        <input type="date" id="startDate" value="2025-10-01" onchange="updateMonth()">
+                        <span>-</span>
+                        <input type="date" id="endDate" value="2025-10-31" onchange="updateMonth()">
                     </div>
                 </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseTable"></tbody>
-                    </table>
+                <div class="control-group">
+                    <label>CURRENCY</label>
+                    <select id="currency" onchange="updateAll()">
+                        <option value="₹">₹ (INR)</option>
+                        <option value="$">$ (USD)</option>
+                        <option value="€">€ (EUR)</option>
+                        <option value="£">£ (GBP)</option>
+                        <option value="¥">¥ (JPY)</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="card section-card">
-                <div class="section-header">
-                    <h2>📋 Bills & Subscriptions</h2>
-                    <div class="filter-group">
-                        <select id="billFilter" onchange="filterBills()">
-                            <option value="all">All Bills</option>
-                            <option value="paid">Paid</option>
-                            <option value="pending">Pending</option>
-                        </select>
-                        <button class="add-btn" onclick="addBillRow()">+ Add Bill</button>
+            <div class="desktop-content">
+                <div id="goalsSection" class="goals-section" style="display: none;">
+                    <h3>🎯 Your Budget Goals</h3>
+                    <div id="goalsContainer"></div>
+                </div>
+
+                <div class="dashboard-card white rule-visualizer">
+                    <h3>🎯 50/30/20 BUDGET RULE</h3>
+                    <div id="rule503020Container"></div>
+                </div>
+
+                <div class="dashboard-card white savings-rate-card">
+                    <h3>📈 SAVINGS RATE TRACKER</h3>
+                    <div id="savingsRateContainer"></div>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="label">💰 INCOME</div>
+                        <div class="amount" id="summaryIncome">₹10,600.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">🛍️ EXPENSES</div>
+                        <div class="amount" id="summaryExpenses">₹0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">📄 BILLS</div>
+                        <div class="amount" id="summaryBills">₹2,828.50</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">💵 SAVINGS</div>
+                        <div class="amount" id="summarySavings">₹4,570.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">💳 DEBT</div>
+                        <div class="amount" id="summaryDebt">₹855.00</div>
                     </div>
                 </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bill Name</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="billTable"></tbody>
-                    </table>
+
+                <div class="dashboard-row">
+                    <div class="dashboard-card">
+                        <h3>FINANCIAL OVERVIEW</h3>
+                        <div class="financial-table">
+                            <table>
+                                <thead>
+                                    <tr><th></th><th>PLANNED</th><th>ACTUAL</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>• Income</td><td id="foIncomePlanned">₹10,600.00</td><td id="foIncomeActual">₹10,600.00</td></tr>
+                                    <tr><td>- Expenses</td><td id="foExpensesPlanned">₹0.00</td><td id="foExpensesActual">₹0.00</td></tr>
+                                    <tr><td>- Bills</td><td id="foBillsPlanned">₹2,828.50</td><td id="foBillsActual">₹2,828.50</td></tr>
+                                    <tr><td>- Savings</td><td id="foSavingsPlanned">₹4,570.00</td><td id="foSavingsActual">₹4,570.00</td></tr>
+                                    <tr><td>- Debt</td><td id="foDebtPlanned">₹855.00</td><td id="foDebtActual">₹855.00</td></tr>
+                                    <tr class="total-row"><td>LEFT</td><td id="foLeftPlanned">₹0.00</td><td id="foLeftActual">₹0.00</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="dashboard-card white">
+                        <h3>AMOUNT LEFT TO SPEND</h3>
+                        <div class="amount-left">
+                            <div class="big-amount" id="amountLeft">₹0.00</div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card white">
+                        <h3>CASH FLOW</h3>
+                        <div class="cash-flow-chart" id="cashFlow"></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card white">
+                    <h3>📊 BUDGET VS ACTUAL COMPARISON</h3>
+                    <canvas id="budgetComparisonChart"></canvas>
+                </div>
+
+                <div class="dashboard-row">
+                    <div class="dashboard-card white">
+                        <h3>📈 SPENDING TRENDS (Last 6 Months)</h3>
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                    <div class="dashboard-card white">
+                        <h3>BUDGET BREAKDOWN</h3>
+                        <div id="pieChart"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="card section-card">
-                <div class="section-header">
-                    <h2>🎯 Savings Goals</h2>
-                    <button class="add-btn" onclick="addSavingsGoal()">+ Add Goal</button>
+            <div class="desktop-category-tables">
+                <div class="category-tables">
+                    <div class="category-card">
+                        <h3>💰 INCOME</h3>
+                        <table class="category-table">
+                            <thead><tr><th></th><th>PLANNED</th><th>ACTUAL</th></tr></thead>
+                            <tbody id="incomeTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="category-card">
+                        <h3>📄 BILLS</h3>
+                        <table class="category-table">
+                            <thead><tr><th></th><th>PLANNED</th><th>ACTUAL</th><th>%</th></tr></thead>
+                            <tbody id="billsTable"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Goal Name</th>
-                                <th>Target Amount</th>
-                                <th>Current Amount</th>
-                                <th>Progress</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="savingsTable"></tbody>
-                    </table>
+                
+                <div class="category-tables">
+                    <div class="category-card">
+                        <h3>🛍️ EXPENSES</h3>
+                        <table class="category-table">
+                            <thead><tr><th></th><th>PLANNED</th><th>ACTUAL</th><th>%</th></tr></thead>
+                            <tbody id="expensesTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="category-card">
+                        <h3>💵 SAVINGS</h3>
+                        <table class="category-table">
+                            <thead><tr><th></th><th>PLANNED</th><th>ACTUAL</th><th>%</th></tr></thead>
+                            <tbody id="savingsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="category-tables">
+                    <div class="category-card">
+                        <h3>💳 DEBT</h3>
+                        <table class="category-table">
+                            <thead><tr><th></th><th>PLANNED</th><th>ACTUAL</th><th>%</th></tr></thead>
+                            <tbody id="debtTable"></tbody>
+                        </table>
+                    </div>
+                    <div></div>
                 </div>
             </div>
 
-            <div class="charts-grid">
-                <div class="card chart-card">
-                    <h3>📊 Expense Breakdown</h3>
-                    <canvas id="expenseChart"></canvas>
+            <div class="mobile-only">
+                <div class="mobile-section active" id="section-dashboard">
+                    <div class="summary-cards">
+                        <div class="summary-card"><div class="label">💰 INCOME</div><div class="amount" id="summaryIncomeMobile">₹10,600.00</div></div>
+                        <div class="summary-card"><div class="label">🛍️ EXPENSES</div><div class="amount" id="summaryExpensesMobile">₹0.00</div></div>
+                        <div class="summary-card"><div class="label">📄 BILLS</div><div class="amount" id="summaryBillsMobile">₹2,828.50</div></div>
+                        <div class="summary-card"><div class="label">💵 SAVINGS</div><div class="amount" id="summarySavingsMobile">₹4,570.00</div></div>
+                        <div class="summary-card"><div class="label">💳 DEBT</div><div class="amount" id="summaryDebtMobile">₹855.00</div></div>
+                    </div>
+                    <div class="dashboard-card white">
+                        <h3>AMOUNT LEFT TO SPEND</h3>
+                        <div class="amount-left"><div class="big-amount" id="amountLeftMobile">₹0.00</div></div>
+                    </div>
                 </div>
-                <div class="card chart-card">
-                    <h3>📈 Monthly Trend</h3>
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
 
-            <div class="card section-card">
-                <div class="section-header">
-                    <h2>📤 Export Data</h2>
-                    <div class="export-buttons">
-                        <button class="export-btn" onclick="exportToCSV()">Export to CSV</button>
-                        <button class="export-btn" onclick="exportToPDF()">Export to PDF</button>
-                        <button class="export-btn danger-btn" onclick="clearAllData()">Clear All Data</button>
+                <div class="mobile-section" id="section-insights" style="display: none;">
+                    <div class="dashboard-card white">
+                        <h3>📊 BUDGET BREAKDOWN</h3>
+                        <div id="pieChartMobile"></div>
+                    </div>
+                </div>
+
+                <div class="mobile-section" id="section-categories" style="display: none;">
+                    <h3 style="text-align: center; margin-bottom: 20px;">📝 Category Details</h3>
+                    <p style="text-align: center; padding: 10px; color: #666; font-size: 14px;">
+                        On desktop, scroll down to see all category tables with add/edit features.
+                    </p>
+                </div>
+
+                <div class="mobile-section mobile-menu-section" id="section-menu" style="display: none;">
+                    <div class="mobile-menu-header">
+                        <div id="userAvatarMobile" class="user-avatar"></div>
+                        <div style="flex: 1; margin-left: 15px;">
+                            <p style="margin: 0; font-size: 12px; color: #666;">Logged in as:</p>
+                            <p style="margin: 0; font-weight: 600; font-size: 14px;" id="userEmailDisplayMobile"></p>
+                        </div>
+                    </div>
+                    <div class="mobile-menu-items">
+                        <button onclick="toggleDarkMode()" class="mobile-menu-btn">
+                            <span id="darkModeIconMobile">🌙</span><span id="darkModeTextMobile">Dark Mode</span>
+                        </button>
+                        <button onclick="exportToPDF()" class="mobile-menu-btn"><span>📥</span><span>Export PDF</span></button>
+                        <button onclick="exportToCSV()" class="mobile-menu-btn"><span>📊</span><span>Export CSV</span></button>
+                        <button onclick="showBackupRestore()" class="mobile-menu-btn"><span>💾</span><span>Backup & Restore</span></button>
+                        <button onclick="showGoalsModal()" class="mobile-menu-btn"><span>🎯</span><span>Budget Goals</span></button>
+                        <button onclick="showRecurringTransactions()" class="mobile-menu-btn"><span>🔄</span><span>Recurring Items</span></button>
+                        <button onclick="showMonthComparison()" class="mobile-menu-btn"><span>📊</span><span>Compare Months</span></button>
+                        <button onclick="viewPreviousMonths()" class="mobile-menu-btn"><span>📅</span><span>Previous Months</span></button>
+                        <button onclick="viewYearlySummary()" class="mobile-menu-btn"><span>📈</span><span>Yearly Summary</span></button>
+                        <button onclick="clearAllData()" class="mobile-menu-btn danger-btn"><span>🗑️</span><span>Clear All Data</span></button>
+                        <button onclick="handleLogout()" class="mobile-menu-btn logout-btn"><span>🚪</span><span>Logout</span></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="saveIndicator" class="save-indicator">💾 Saved</div>
-
-    <script src="script.js"></script>
+    <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
+    <script src="./script.js"></script>
 </body>
 </html>
