@@ -1,6 +1,4 @@
-// ===== ENHANCED BUDGET DASHBOARD - COMPLETE VERSION WITH ALL 10 FEATURES =====
-
-// ===== GLOBAL VARIABLES =====
+// ===== SIMPLE AUTHENTICATION (No Supabase needed) =====
 let currentUser = null;
 let currency = '₹';
 let currentMonth = '';
@@ -13,1110 +11,6 @@ let filterState = {
   debt: 'all'
 };
 let trendsChart = null;
-
-// ===== MOBILE NAVIGATION =====
-function showMobileSection(section) {
-  const sections = document.querySelectorAll('.mobile-section');
-  const buttons = document.querySelectorAll('.nav-btn');
-  
-  sections.forEach(s => {
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
-  
-  buttons.forEach(b => b.classList.remove('active'));
-  
-  const targetSection = document.getElementById(`section-${section}`);
-  if (targetSection) {
-    targetSection.classList.add('active');
-    targetSection.style.display = 'block';
-  }
-  
-  const clickedBtn = document.querySelector(`[data-section="${section}"]`);
-  if (clickedBtn) {
-    clickedBtn.classList.add('active');
-  }
-}
-
-// ===== ALERT BANNER =====
-function closeAlertBanner() {
-  const banner = document.getElementById('alertBanner');
-  if (banner) {
-    banner.style.display = 'none';
-  }
-}
-
-function showAlertBanner(message) {
-  const banner = document.getElementById('alertBanner');
-  const messageEl = document.getElementById('alertMessage');
-  if (banner && messageEl) {
-    messageEl.textContent = message;
-    banner.style.display = 'block';
-    setTimeout(() => closeAlertBanner(), 5000);
-  }
-}
-
-// ===== BACKUP & RESTORE =====
-function showBackupRestore() {
-  let html = `
-    <h3 style="margin-bottom: 20px;">💾 Backup & Restore</h3>
-    <div style="display: grid; gap: 20px;">
-      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
-        <h4 style="margin: 0 0 10px 0;">📥 Create Backup</h4>
-        <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Download all your budget data as a JSON file</p>
-        <button onclick="backupAllData(); closeModal();" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
-          Download Backup
-        </button>
-      </div>
-      
-      <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-        <h4 style="margin: 0 0 10px 0;">📤 Restore from Backup</h4>
-        <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Upload a previously saved backup file</p>
-        <button onclick="document.getElementById('restoreFileInput').click(); closeModal();" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">
-          Choose Backup File
-        </button>
-      </div>
-    </div>
-  `;
-  
-  showModal('Backup & Restore', html);
-}
-
-function handleRestoreFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const backup = JSON.parse(e.target.result);
-      
-      if (!backup.version || !backup.user || !backup.currentData) {
-        showToast('Invalid backup file format', 'error');
-        return;
-      }
-      
-      if (backup.currentData) {
-        data = backup.currentData;
-        saveData();
-      }
-      
-      if (backup.goals) {
-        saveUserGoals(backup.goals);
-      }
-      
-      if (backup.recurring) {
-        saveRecurringTransactions(backup.recurring);
-      }
-      
-      if (backup.months) {
-        Object.keys(backup.months).forEach(monthKey => {
-          const storageKey = getUserStorageKey(monthKey);
-          localStorage.setItem(storageKey, JSON.stringify(backup.months[monthKey]));
-        });
-        
-        const monthsListKey = getUserStorageKey('savedMonthsList');
-        let savedMonths = getSavedMonths();
-        Object.keys(backup.months).forEach(monthKey => {
-          if (!savedMonths.includes(monthKey)) {
-            savedMonths.push(monthKey);
-          }
-        });
-        localStorage.setItem(monthsListKey, JSON.stringify(savedMonths));
-      }
-      
-      updateAll();
-      updateTrendsChart();
-      updateGoalsDisplay();
-      
-      showToast('✅ Data restored successfully! Refreshing...', 'success');
-      setTimeout(() => location.reload(), 1500);
-      
-    } catch (error) {
-      console.error('Restore error:', error);
-      showToast('❌ Failed to restore backup. Invalid file.', 'error');
-    }
-  };
-  
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// ===== 50/30/20 RULE DISPLAY =====
-function update503020Display() {
-  const container = document.getElementById('rule503020Container');
-  if (!container) return;
-  
-  const totalIncome = calculateTotal('income', 'actual');
-  if (totalIncome === 0) {
-    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Add income data to see your 50/30/20 analysis</p>';
-    return;
-  }
-  
-  const needsActual = data.expenses.filter(e => e.category === 'needs').reduce((sum, e) => sum + (e.actual || 0), 0) +
-                      data.bills.filter(b => b.category === 'needs').reduce((sum, b) => sum + (b.actual || 0), 0);
-  const wantsActual = data.expenses.filter(e => e.category === 'wants').reduce((sum, e) => sum + (e.actual || 0), 0) +
-                      data.bills.filter(b => b.category === 'wants').reduce((sum, b) => sum + (b.actual || 0), 0);
-  const savingsActual = calculateTotal('savings', 'actual');
-  
-  const needsIdeal = totalIncome * 0.50;
-  const wantsIdeal = totalIncome * 0.30;
-  const savingsIdeal = totalIncome * 0.20;
-  
-  const needsPercent = (needsActual / totalIncome * 100).toFixed(1);
-  const wantsPercent = (wantsActual / totalIncome * 100).toFixed(1);
-  const savingsPercent = (savingsActual / totalIncome * 100).toFixed(1);
-  
-  container.innerHTML = `
-    <div class="rule-container">
-      <div class="rule-item">
-        <div class="rule-percentage" style="color: #ef4444;">50%</div>
-        <div class="rule-label">Needs</div>
-        <div class="rule-amount">${formatCurrency(needsActual)}</div>
-        <div class="rule-bar">
-          <div class="rule-bar-fill" style="width: ${Math.min((needsActual / needsIdeal * 100), 100)}%; background: #ef4444;"></div>
-        </div>
-        <div class="rule-status" style="color: ${needsActual <= needsIdeal ? '#10b981' : '#ef4444'};">
-          ${needsPercent}% of income
-        </div>
-      </div>
-      
-      <div class="rule-item">
-        <div class="rule-percentage" style="color: #f59e0b;">30%</div>
-        <div class="rule-label">Wants</div>
-        <div class="rule-amount">${formatCurrency(wantsActual)}</div>
-        <div class="rule-bar">
-          <div class="rule-bar-fill" style="width: ${Math.min((wantsActual / wantsIdeal * 100), 100)}%; background: #f59e0b;"></div>
-        </div>
-        <div class="rule-status" style="color: ${wantsActual <= wantsIdeal ? '#10b981' : '#ef4444'};">
-          ${wantsPercent}% of income
-        </div>
-      </div>
-      
-      <div class="rule-item">
-        <div class="rule-percentage" style="color: #3b82f6;">20%</div>
-        <div class="rule-label">Savings</div>
-        <div class="rule-amount">${formatCurrency(savingsActual)}</div>
-        <div class="rule-bar">
-          <div class="rule-bar-fill" style="width: ${Math.min((savingsActual / savingsIdeal * 100), 100)}%; background: #3b82f6;"></div>
-        </div>
-        <div class="rule-status" style="color: ${savingsActual >= savingsIdeal ? '#10b981' : '#f59e0b'};">
-          ${savingsPercent}% of income
-        </div>
-      </div>
-    </div>
-    <div style="text-align: center; margin-top: 20px;">
-      <button onclick="show503020Rule()" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-        View Detailed Analysis
-      </button>
-    </div>
-  `;
-}
-
-// ===== SAVINGS RATE DISPLAY =====
-function updateSavingsRateDisplay() {
-  const container = document.getElementById('savingsRateContainer');
-  if (!container) return;
-  
-  const totalIncome = calculateTotal('income', 'actual');
-  const totalSavings = calculateTotal('savings', 'actual');
-  
-  if (totalIncome === 0) {
-    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Add income data to track your savings rate</p>';
-    return;
-  }
-  
-  const savingsRate = (totalSavings / totalIncome * 100).toFixed(1);
-  const monthlySavings = totalSavings;
-  const annualSavings = monthlySavings * 12;
-  
-  let rateColor = '#ef4444';
-  if (savingsRate >= 20) rateColor = '#10b981';
-  else if (savingsRate >= 10) rateColor = '#f59e0b';
-  
-  container.innerHTML = `
-    <div class="savings-rate-display">
-      <div class="savings-rate-percentage" style="color: ${rateColor};">${savingsRate}%</div>
-      <div class="savings-rate-label">Your Savings Rate</div>
-    </div>
-    <div class="savings-trend">
-      <div class="trend-item">
-        <div class="trend-value">${formatCurrency(monthlySavings)}</div>
-        <div class="trend-label">Monthly</div>
-      </div>
-      <div class="trend-item">
-        <div class="trend-value">${formatCurrency(annualSavings)}</div>
-        <div class="trend-label">Annual</div>
-      </div>
-    </div>
-    <div style="text-align: center; margin-top: 20px;">
-      <button onclick="showSavingsRate()" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-        View Full Analysis
-      </button>
-    </div>
-  `;
-}
-
-// ===== BUDGET COMPARISON CHART =====
-function updateBudgetComparisonChart() {
-  const canvas = document.getElementById('budgetComparisonChart');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  
-  const categories = ['Income', 'Expenses', 'Bills', 'Savings', 'Debt'];
-  const planned = [
-    calculateTotal('income', 'planned'),
-    calculateTotal('expenses', 'planned'),
-    calculateTotal('bills', 'planned'),
-    calculateTotal('savings', 'planned'),
-    calculateTotal('debt', 'planned')
-  ];
-  const actual = [
-    calculateTotal('income', 'actual'),
-    calculateTotal('expenses', 'actual'),
-    calculateTotal('bills', 'actual'),
-    calculateTotal('savings', 'actual'),
-    calculateTotal('debt', 'actual')
-  ];
-  
-  const isDark = document.body.classList.contains('dark-mode');
-  
-  if (window.budgetComparisonChart) {
-    window.budgetComparisonChart.destroy();
-  }
-  
-  window.budgetComparisonChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: categories,
-      datasets: [
-        {
-          label: 'Planned',
-          data: planned,
-          backgroundColor: 'rgba(139, 92, 246, 0.6)',
-          borderColor: '#8b5cf6',
-          borderWidth: 2
-        },
-        {
-          label: 'Actual',
-          data: actual,
-          backgroundColor: 'rgba(16, 185, 129, 0.6)',
-          borderColor: '#10b981',
-          borderWidth: 2
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          labels: {
-            color: isDark ? '#e5e7eb' : '#333'
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.dataset.label + ': ' + formatCurrency(context.raw);
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: isDark ? '#e5e7eb' : '#333',
-            callback: function(value) {
-              return currency + value.toLocaleString();
-            }
-          },
-          grid: {
-            color: isDark ? '#374151' : '#e5e7eb'
-          }
-        },
-        x: {
-          ticks: {
-            color: isDark ? '#e5e7eb' : '#333'
-          },
-          grid: {
-            color: isDark ? '#374151' : '#e5e7eb'
-          }
-        }
-      }
-    }
-  });
-}
-
-// ===== MOBILE AVATAR UPDATE =====
-function updateMobileAvatar() {
-  if (!currentUser) return;
-  
-  const mobileAvatar = document.getElementById('userAvatarMobile');
-  const mobileEmail = document.getElementById('userEmailDisplayMobile');
-  const darkModeIconMobile = document.getElementById('darkModeIconMobile');
-  const darkModeTextMobile = document.getElementById('darkModeTextMobile');
-  
-  if (mobileAvatar) {
-    const initials = currentUser.email.substring(0, 2).toUpperCase();
-    const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-    const colorIndex = currentUser.email.charCodeAt(0) % colors.length;
-    
-    mobileAvatar.textContent = initials;
-    mobileAvatar.style.backgroundColor = colors[colorIndex];
-  }
-  
-  if (mobileEmail) {
-    mobileEmail.textContent = currentUser.email;
-  }
-  
-  const isDark = document.body.classList.contains('dark-mode');
-  if (darkModeIconMobile && darkModeTextMobile) {
-    darkModeIconMobile.textContent = isDark ? '☀️' : '🌙';
-    darkModeTextMobile.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-  }
-}
-
-// ===== FEATURE #6: EXPENSE CATEGORIES & TAGS =====
-const EXPENSE_CATEGORIES = {
-  needs: { name: 'Needs', color: '#ef4444', icon: '🏠' },
-  wants: { name: 'Wants', color: '#f59e0b', icon: '🎮' },
-  savings: { name: 'Savings', color: '#10b981', icon: '💰' },
-  debt: { name: 'Debt', color: '#ec4899', icon: '💳' }
-};
-
-function getCategoryForItem(itemName, categoryType) {
-  const needsKeywords = ['rent', 'apartment', 'mortgage', 'electricity', 'water', 'groceries', 'internet', 'insurance', 'fuel', 'maintenance'];
-  const wantsKeywords = ['entertainment', 'movies', 'swiggy', 'zomato', 'netflix', 'amazon', 'gym', 'vacation'];
-  const savingsKeywords = ['retirement', 'emergency', 'savings', 'investment'];
-  const debtKeywords = ['loan', 'credit', 'debt', 'lease'];
-  
-  const lowerName = itemName.toLowerCase();
-  
-  if (categoryType === 'savings' || savingsKeywords.some(k => lowerName.includes(k))) return 'savings';
-  if (categoryType === 'debt' || debtKeywords.some(k => lowerName.includes(k))) return 'debt';
-  if (wantsKeywords.some(k => lowerName.includes(k))) return 'wants';
-  if (needsKeywords.some(k => lowerName.includes(k))) return 'needs';
-  
-  return categoryType === 'bills' ? 'needs' : 'wants';
-}
-
-function initializeCategories() {
-  ['expenses', 'bills', 'savings', 'debt'].forEach(category => {
-    data[category].forEach(item => {
-      if (!item.category) {
-        item.category = getCategoryForItem(item.name, category);
-      }
-      if (!item.tags) {
-        item.tags = [];
-      }
-    });
-  });
-}
-
-function showCategoryBreakdown() {
-  const categoryTotals = {
-    needs: 0,
-    wants: 0,
-    savings: 0,
-    debt: 0
-  };
-  
-  ['expenses', 'bills', 'savings', 'debt'].forEach(category => {
-    data[category].forEach(item => {
-      const cat = item.category || getCategoryForItem(item.name, category);
-      categoryTotals[cat] += item.actual || 0;
-    });
-  });
-  
-  const total = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-  
-  let html = '<h3 style="margin-bottom: 20px;">Spending by Category 📊</h3>';
-  html += '<div style="display: grid; gap: 15px;">';
-  
-  Object.keys(EXPENSE_CATEGORIES).forEach(catKey => {
-    const cat = EXPENSE_CATEGORIES[catKey];
-    const amount = categoryTotals[catKey];
-    const percentage = total > 0 ? (amount / total * 100).toFixed(1) : 0;
-    
-    html += `
-      <div style="background: ${cat.color}22; padding: 15px; border-radius: 8px; border-left: 4px solid ${cat.color};">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-weight: bold;">${cat.icon} ${cat.name}</span>
-          <span style="font-weight: bold; color: ${cat.color};">${formatCurrency(amount)}</span>
-        </div>
-        <div style="background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
-          <div style="background: ${cat.color}; height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
-        </div>
-        <div style="text-align: right; margin-top: 4px; font-size: 12px; color: #666;">${percentage}%</div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  showModal('Category Breakdown', html);
-}
-
-// ===== FEATURE #3: RECURRING TRANSACTIONS =====
-function getRecurringTransactions() {
-  if (!currentUser) return [];
-  const key = getUserStorageKey('recurring');
-  const saved = localStorage.getItem(key);
-  return saved ? JSON.parse(saved) : [];
-}
-
-function saveRecurringTransactions(recurring) {
-  if (!currentUser) return;
-  const key = getUserStorageKey('recurring');
-  localStorage.setItem(key, JSON.stringify(recurring));
-}
-
-function showRecurringModal() {
-  const recurring = getRecurringTransactions();
-  
-  let html = `
-    <div style="margin-bottom: 20px;">
-      <h3 style="margin-bottom: 15px;">Recurring Transactions 🔄</h3>
-      <button onclick="addRecurringTransaction()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-        + Add Recurring Transaction
-      </button>
-    </div>
-  `;
-  
-  if (recurring.length === 0) {
-    html += '<p style="color: #666; text-align: center; padding: 40px;">No recurring transactions. Add bills or expenses that repeat monthly!</p>';
-  } else {
-    recurring.forEach((item, index) => {
-      const frequencyText = item.frequency === 'monthly' ? 'Every month' : 
-                           item.frequency === 'weekly' ? 'Every week' : 'Every year';
-      
-      html += `
-        <div style="background: #f8f5ff; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #8b5cf6;">
-          <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div style="flex: 1;">
-              <h4 style="margin: 0 0 5px 0;">${item.name}</h4>
-              <p style="margin: 0; color: #666; font-size: 13px;">
-                ${formatCurrency(item.amount)} • ${frequencyText} • ${item.category}
-              </p>
-              <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">Next: ${item.nextDate}</p>
-            </div>
-            <div>
-              <button onclick="applyRecurring(${index})" style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 12px;">Apply Now</button>
-              <button onclick="deleteRecurring(${index})" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-  }
-  
-  showModal('Recurring Transactions', html);
-}
-
-function addRecurringTransaction() {
-  const name = prompt('Transaction name (e.g., "Rent"):');
-  if (!name) return;
-  
-  const amount = parseFloat(prompt('Amount:'));
-  if (isNaN(amount) || amount <= 0) {
-    showToast('Invalid amount', 'error');
-    return;
-  }
-  
-  const category = prompt('Category (expenses/bills/savings/debt):') || 'expenses';
-  const frequency = prompt('Frequency (monthly/weekly/yearly):') || 'monthly';
-  
-  const recurring = getRecurringTransactions();
-  recurring.push({
-    name: name.trim(),
-    amount: amount,
-    category: category,
-    frequency: frequency,
-    nextDate: new Date().toISOString().split('T')[0],
-    autoApply: false
-  });
-  
-  saveRecurringTransactions(recurring);
-  showToast('Recurring transaction added! 🔄', 'success');
-  showRecurringModal();
-}
-
-function applyRecurring(index) {
-  const recurring = getRecurringTransactions();
-  const item = recurring[index];
-  
-  if (!data[item.category]) {
-    showToast('Invalid category', 'error');
-    return;
-  }
-  
-  const existingIndex = data[item.category].findIndex(i => i.name === item.name);
-  
-  if (existingIndex >= 0) {
-    data[item.category][existingIndex].actual += item.amount;
-  } else {
-    data[item.category].push({
-      name: item.name,
-      planned: item.amount,
-      actual: item.amount,
-      checked: true,
-      category: getCategoryForItem(item.name, item.category),
-      tags: []
-    });
-  }
-  
-  const nextDate = new Date(item.nextDate);
-  if (item.frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
-  else if (item.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-  else if (item.frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
-  
-  recurring[index].nextDate = nextDate.toISOString().split('T')[0];
-  saveRecurringTransactions(recurring);
-  
-  updateAll();
-  showToast(`Applied: ${item.name}`, 'success');
-  showRecurringModal();
-}
-
-function deleteRecurring(index) {
-  if (!confirm('Delete this recurring transaction?')) return;
-  
-  const recurring = getRecurringTransactions();
-  recurring.splice(index, 1);
-  saveRecurringTransactions(recurring);
-  showToast('Recurring transaction deleted', 'info');
-  showRecurringModal();
-}
-
-// ===== FEATURE #2: SMART BUDGET ALERTS =====
-function checkBudgetAlerts() {
-  const alerts = [];
-  
-  ['expenses', 'bills', 'savings', 'debt'].forEach(category => {
-    data[category].forEach(item => {
-      if (item.planned > 0) {
-        const percentage = (item.actual / item.planned) * 100;
-        
-        if (percentage >= 100) {
-          alerts.push({
-            type: 'danger',
-            message: `⚠️ ${item.name}: Over budget! (${percentage.toFixed(0)}%)`,
-            item: item
-          });
-        } else if (percentage >= 80) {
-          alerts.push({
-            type: 'warning',
-            message: `⚡ ${item.name}: Approaching limit (${percentage.toFixed(0)}%)`,
-            item: item
-          });
-        }
-      }
-    });
-  });
-  
-  const totalIncome = calculateTotal('income', 'actual');
-  const totalExpenses = calculateTotal('expenses', 'actual') + calculateTotal('bills', 'actual');
-  const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-  
-  if (expenseRatio > 80) {
-    alerts.push({
-      type: 'danger',
-      message: `🚨 Total expenses are ${expenseRatio.toFixed(0)}% of income!`
-    });
-  }
-  
-  const savingsRate = totalIncome > 0 ? (calculateTotal('savings', 'actual') / totalIncome) * 100 : 0;
-  if (savingsRate < 10 && totalIncome > 0) {
-    alerts.push({
-      type: 'info',
-      message: `💡 Savings rate is ${savingsRate.toFixed(1)}%. Consider saving more!`
-    });
-  }
-  
-  return alerts;
-}
-
-function showAlerts() {
-  const alerts = checkBudgetAlerts();
-  
-  let html = '<h3 style="margin-bottom: 20px;">Budget Alerts 🔔</h3>';
-  
-  if (alerts.length === 0) {
-    html += '<div style="text-align: center; padding: 40px; color: #10b981;"><h2>✅ All Good!</h2><p>Your budget is on track. Keep it up!</p></div>';
-  } else {
-    alerts.forEach(alert => {
-      const bgColor = alert.type === 'danger' ? '#fee' : alert.type === 'warning' ? '#fef3c7' : '#dbeafe';
-      const borderColor = alert.type === 'danger' ? '#ef4444' : alert.type === 'warning' ? '#f59e0b' : '#3b82f6';
-      
-      html += `
-        <div style="background: ${bgColor}; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
-          ${alert.message}
-        </div>
-      `;
-    });
-  }
-  
-  showModal('Budget Alerts', html);
-}
-
-// ===== FEATURE #1: BUDGET VS ACTUAL COMPARISON CHART =====
-function showComparisonChart() {
-  const categories = ['Income', 'Expenses', 'Bills', 'Savings', 'Debt'];
-  const planned = [
-    calculateTotal('income', 'planned'),
-    calculateTotal('expenses', 'planned'),
-    calculateTotal('bills', 'planned'),
-    calculateTotal('savings', 'planned'),
-    calculateTotal('debt', 'planned')
-  ];
-  const actual = [
-    calculateTotal('income', 'actual'),
-    calculateTotal('expenses', 'actual'),
-    calculateTotal('bills', 'actual'),
-    calculateTotal('savings', 'actual'),
-    calculateTotal('debt', 'actual')
-  ];
-  
-  let html = `
-    <h3 style="margin-bottom: 20px;">Budget vs Actual Comparison 📊</h3>
-    <div id="comparisonChartContainer" style="background: white; padding: 20px; border-radius: 8px;">
-      <canvas id="comparisonChartCanvas"></canvas>
-    </div>
-  `;
-  
-  showModal('Budget Comparison', html);
-  
-  setTimeout(() => {
-    const ctx = document.getElementById('comparisonChartCanvas');
-    if (ctx && window.Chart) {
-      const isDark = document.body.classList.contains('dark-mode');
-      
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: categories,
-          datasets: [
-            {
-              label: 'Planned',
-              data: planned,
-              backgroundColor: 'rgba(139, 92, 246, 0.6)',
-              borderColor: '#8b5cf6',
-              borderWidth: 2
-            },
-            {
-              label: 'Actual',
-              data: actual,
-              backgroundColor: 'rgba(16, 185, 129, 0.6)',
-              borderColor: '#10b981',
-              borderWidth: 2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: {
-                color: isDark ? '#e5e7eb' : '#333'
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return context.dataset.label + ': ' + formatCurrency(context.raw);
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                color: isDark ? '#e5e7eb' : '#333',
-                callback: function(value) {
-                  return currency + value.toLocaleString();
-                }
-              },
-              grid: {
-                color: isDark ? '#374151' : '#e5e7eb'
-              }
-            },
-            x: {
-              ticks: {
-                color: isDark ? '#e5e7eb' : '#333'
-              },
-              grid: {
-                color: isDark ? '#374151' : '#e5e7eb'
-              }
-            }
-          }
-        }
-      });
-    }
-  }, 100);
-}
-
-// ===== FEATURE #4: CSV/EXCEL EXPORT =====
-function exportToCSV() {
-  let csv = 'Category,Item,Planned,Actual,Status\n';
-  
-  const categories = ['income', 'expenses', 'bills', 'savings', 'debt'];
-  
-  categories.forEach(category => {
-    data[category].forEach(item => {
-      const status = item.checked ? 'Paid' : 'Unpaid';
-      csv += `${category},${item.name},${item.planned},${item.actual},${status}\n`;
-    });
-  });
-  
-  csv += `\nSummary\n`;
-  csv += `Total Income,,${calculateTotal('income', 'planned')},${calculateTotal('income', 'actual')}\n`;
-  csv += `Total Expenses,,${calculateTotal('expenses', 'planned')},${calculateTotal('expenses', 'actual')}\n`;
-  csv += `Total Bills,,${calculateTotal('bills', 'planned')},${calculateTotal('bills', 'actual')}\n`;
-  csv += `Total Savings,,${calculateTotal('savings', 'planned')},${calculateTotal('savings', 'actual')}\n`;
-  csv += `Total Debt,,${calculateTotal('debt', 'planned')},${calculateTotal('debt', 'actual')}\n`;
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Budget_${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-  
-  showToast('✅ CSV exported successfully!', 'success');
-}
-
-function exportToExcel() {
-  if (typeof XLSX === 'undefined') {
-    showToast('Excel export not available. Please include SheetJS library.', 'error');
-    return;
-  }
-  
-  const wb = XLSX.utils.book_new();
-  
-  const categories = ['income', 'expenses', 'bills', 'savings', 'debt'];
-  
-  categories.forEach(category => {
-    const wsData = [['Item', 'Planned', 'Actual', 'Status']];
-    
-    data[category].forEach(item => {
-      wsData.push([
-        item.name,
-        item.planned,
-        item.actual,
-        item.checked ? 'Paid' : 'Unpaid'
-      ]);
-    });
-    
-    wsData.push([]);
-    wsData.push(['TOTAL', calculateTotal(category, 'planned'), calculateTotal(category, 'actual')]);
-    
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, category.charAt(0).toUpperCase() + category.slice(1));
-  });
-  
-  const summaryData = [
-    ['Category', 'Planned', 'Actual'],
-    ['Income', calculateTotal('income', 'planned'), calculateTotal('income', 'actual')],
-    ['Expenses', calculateTotal('expenses', 'planned'), calculateTotal('expenses', 'actual')],
-    ['Bills', calculateTotal('bills', 'planned'), calculateTotal('bills', 'actual')],
-    ['Savings', calculateTotal('savings', 'planned'), calculateTotal('savings', 'actual')],
-    ['Debt', calculateTotal('debt', 'planned'), calculateTotal('debt', 'actual')]
-  ];
-  
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
-  
-  XLSX.writeFile(wb, `Budget_${new Date().toISOString().split('T')[0]}.xlsx`);
-  showToast('✅ Excel exported successfully!', 'success');
-}
-
-// ===== FEATURE #5: MONTH COMPARISON VIEW =====
-function showMonthComparison() {
-  const savedMonths = getSavedMonths();
-  
-  if (savedMonths.length < 2) {
-    showToast('Need at least 2 months of data to compare', 'info');
-    return;
-  }
-  
-  const lastMonths = savedMonths.sort().slice(-6);
-  
-  const comparisonData = lastMonths.map(monthKey => {
-    const parts = monthKey.split('_');
-    const year = parts[1];
-    const month = parts[2];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
-    const storageKey = getUserStorageKey(monthKey);
-    const monthData = JSON.parse(localStorage.getItem(storageKey));
-    
-    if (!monthData) return null;
-    
-    return {
-      label: `${monthNames[parseInt(month)]} ${year}`,
-      income: monthData.income.reduce((sum, item) => sum + (item.actual || 0), 0),
-      expenses: monthData.expenses.reduce((sum, item) => sum + (item.actual || 0), 0),
-      bills: monthData.bills.reduce((sum, item) => sum + (item.actual || 0), 0),
-      savings: monthData.savings.reduce((sum, item) => sum + (item.actual || 0), 0)
-    };
-  }).filter(d => d !== null);
-  
-  let html = `
-    <h3 style="margin-bottom: 20px;">Month-to-Month Comparison 📈</h3>
-    <div style="overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr style="background: #f3f4f6;">
-            <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Month</th>
-            <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Income</th>
-            <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Expenses</th>
-            <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Bills</th>
-            <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Savings</th>
-            <th style="padding: 12px; text-align: right; border: 1px solid #e5e7eb;">Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-  
-  comparisonData.forEach(month => {
-    const balance = month.income - month.expenses - month.bills - month.savings;
-    html += `
-      <tr>
-        <td style="padding: 10px; border: 1px solid #e5e7eb;">${month.label}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; color: #10b981;">${formatCurrency(month.income)}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; color: #ef4444;">${formatCurrency(month.expenses)}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; color: #f59e0b;">${formatCurrency(month.bills)}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; color: #3b82f6;">${formatCurrency(month.savings)}</td>
-        <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; font-weight: bold; color: ${balance >= 0 ? '#10b981' : '#ef4444'};">${formatCurrency(balance)}</td>
-      </tr>
-    `;
-  });
-  
-  html += '</tbody></table></div>';
-  
-  const avgIncome = comparisonData.reduce((sum, m) => sum + m.income, 0) / comparisonData.length;
-  const avgExpenses = comparisonData.reduce((sum, m) => sum + m.expenses, 0) / comparisonData.length;
-  const avgSavings = comparisonData.reduce((sum, m) => sum + m.savings, 0) / comparisonData.length;
-  
-  html += `
-    <div style="margin-top: 20px; padding: 15px; background: #f8f5ff; border-radius: 8px;">
-      <h4>Averages</h4>
-      <p>Monthly Income: ${formatCurrency(avgIncome)}</p>
-      <p>Monthly Expenses: ${formatCurrency(avgExpenses)}</p>
-      <p>Monthly Savings: ${formatCurrency(avgSavings)}</p>
-      <p>Savings Rate: ${(avgSavings / avgIncome * 100).toFixed(1)}%</p>
-    </div>
-  `;
-  
-  showModal('Month Comparison', html);
-}
-
-// ===== FEATURE #8: 50/30/20 RULE VISUALIZER =====
-function show503020Rule() {
-  const totalIncome = calculateTotal('income', 'actual');
-  
-  if (totalIncome === 0) {
-    showToast('Add income data first', 'info');
-    return;
-  }
-  
-  const totalExpenses = calculateTotal('expenses', 'actual') + calculateTotal('bills', 'actual');
-  const totalSavings = calculateTotal('savings', 'actual');
-  
-  const needsActual = data.expenses.filter(e => e.category === 'needs').reduce((sum, e) => sum + (e.actual || 0), 0) +
-                      data.bills.filter(b => b.category === 'needs').reduce((sum, b) => sum + (b.actual || 0), 0);
-  const wantsActual = data.expenses.filter(e => e.category === 'wants').reduce((sum, e) => sum + (e.actual || 0), 0) +
-                      data.bills.filter(b => b.category === 'wants').reduce((sum, b) => sum + (b.actual || 0), 0);
-  
-  const needsIdeal = totalIncome * 0.50;
-  const wantsIdeal = totalIncome * 0.30;
-  const savingsIdeal = totalIncome * 0.20;
-  
-  const needsPercent = (needsActual / totalIncome * 100).toFixed(1);
-  const wantsPercent = (wantsActual / totalIncome * 100).toFixed(1);
-  const savingsPercent = (totalSavings / totalIncome * 100).toFixed(1);
-  
-  let html = `
-    <h3 style="margin-bottom: 20px;">50/30/20 Budget Rule Analysis 📊</h3>
-    <p style="color: #666; margin-bottom: 20px;">The 50/30/20 rule suggests: 50% for needs, 30% for wants, 20% for savings & debt.</p>
-    
-    <div style="display: grid; gap: 15px;">
-      <div style="background: #fee; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span><strong>🏠 Needs (50%)</strong></span>
-          <span><strong>${formatCurrency(needsActual)} / ${formatCurrency(needsIdeal)}</strong></span>
-        </div>
-        <div style="background: #fef2f2; border-radius: 4px; height: 24px; overflow: hidden;">
-          <div style="background: #ef4444; height: 100%; width: ${Math.min((needsActual / needsIdeal * 100), 100)}%; transition: width 0.3s; display: flex; align-items: center; padding-left: 10px; color: white; font-weight: bold; font-size: 12px;">
-            ${needsPercent}%
-          </div>
-        </div>
-        <p style="margin: 8px 0 0 0; font-size: 13px; color: ${needsActual <= needsIdeal ? '#10b981' : '#ef4444'};">
-          ${needsActual <= needsIdeal ? '✅ Within budget' : '⚠️ Over by ' + formatCurrency(needsActual - needsIdeal)}
-        </p>
-      </div>
-      
-      <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span><strong>🎮 Wants (30%)</strong></span>
-          <span><strong>${formatCurrency(wantsActual)} / ${formatCurrency(wantsIdeal)}</strong></span>
-        </div>
-        <div style="background: #fefce8; border-radius: 4px; height: 24px; overflow: hidden;">
-          <div style="background: #f59e0b; height: 100%; width: ${Math.min((wantsActual / wantsIdeal * 100), 100)}%; transition: width 0.3s; display: flex; align-items: center; padding-left: 10px; color: white; font-weight: bold; font-size: 12px;">
-            ${wantsPercent}%
-          </div>
-        </div>
-        <p style="margin: 8px 0 0 0; font-size: 13px; color: ${wantsActual <= wantsIdeal ? '#10b981' : '#ef4444'};">
-          ${wantsActual <= wantsIdeal ? '✅ Within budget' : '⚠️ Over by ' + formatCurrency(wantsActual - wantsIdeal)}
-        </p>
-      </div>
-      
-      <div style="background: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-          <span><strong>💰 Savings (20%)</strong></span>
-          <span><strong>${formatCurrency(totalSavings)} / ${formatCurrency(savingsIdeal)}</strong></span>
-        </div>
-        <div style="background: #eff6ff; border-radius: 4px; height: 24px; overflow: hidden;">
-          <div style="background: #3b82f6; height: 100%; width: ${Math.min((totalSavings / savingsIdeal * 100), 100)}%; transition: width 0.3s; display: flex; align-items: center; padding-left: 10px; color: white; font-weight: bold; font-size: 12px;">
-            ${savingsPercent}%
-          </div>
-        </div>
-        <p style="margin: 8px 0 0 0; font-size: 13px; color: ${totalSavings >= savingsIdeal ? '#10b981' : '#f59e0b'};">
-          ${totalSavings >= savingsIdeal ? '✅ Meeting goal!' : '💡 Save ' + formatCurrency(savingsIdeal - totalSavings) + ' more'}
-        </p>
-      </div>
-    </div>
-    
-    <div style="margin-top: 20px; padding: 15px; background: #f8f5ff; border-radius: 8px;">
-      <h4>Quick Tips</h4>
-      <ul style="margin: 10px 0; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">Review your wants category and cut unnecessary expenses</li>
-        <li style="margin-bottom: 8px;">Automate savings to hit your 20% target</li>
-        <li style="margin-bottom: 8px;">Track needs carefully - housing and utilities should be under 50%</li>
-      </ul>
-    </div>
-  `;
-  
-  showModal('50/30/20 Budget Rule', html);
-}
-
-// ===== FEATURE #9: SAVINGS RATE CALCULATOR =====
-function showSavingsRate() {
-  const totalIncome = calculateTotal('income', 'actual');
-  const totalSavings = calculateTotal('savings', 'actual');
-  const totalExpenses = calculateTotal('expenses', 'actual') + calculateTotal('bills', 'actual');
-  
-  if (totalIncome === 0) {
-    showToast('Add income data first', 'info');
-    return;
-  }
-  
-  const savingsRate = (totalSavings / totalIncome * 100).toFixed(1);
-  const monthlySavings = totalSavings;
-  const annualSavings = monthlySavings * 12;
-  
-  const yearsTo100k = totalSavings > 0 ? (100000 / annualSavings).toFixed(1) : '∞';
-  const yearsTo500k = totalSavings > 0 ? (500000 / annualSavings).toFixed(1) : '∞';
-  const yearsTo1m = totalSavings > 0 ? (1000000 / annualSavings).toFixed(1) : '∞';
-  
-  let rateComment = '';
-  if (savingsRate < 5) rateComment = '🔴 Low - Consider reducing expenses';
-  else if (savingsRate < 10) rateComment = '🟠 Fair - Room for improvement';
-  else if (savingsRate < 20) rateComment = '🟡 Good - Above average';
-  else if (savingsRate < 30) rateComment = '🟢 Great - Excellent savings habit';
-  else rateComment = '🌟 Outstanding - Top 10%!';
-  
-  let html = `
-    <h3 style="margin-bottom: 20px;">Savings Rate Analysis 💰</h3>
-    
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-      <h2 style="margin: 0 0 10px 0; font-size: 48px; font-weight: bold;">${savingsRate}%</h2>
-      <p style="margin: 0; font-size: 18px;">Your Savings Rate</p>
-      <p style="margin: 10px 0 0 0; font-size: 14px;">${rateComment}</p>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
-      <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
-        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Monthly Savings</div>
-        <div style="font-size: 24px; font-weight: bold; color: #10b981;">${formatCurrency(monthlySavings)}</div>
-      </div>
-      <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Annual Savings</div>
-        <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${formatCurrency(annualSavings)}</div>
-      </div>
-    </div>
-    
-    <div style="background: #f8f5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-      <h4 style="margin: 0 0 15px 0;">Time to Reach Goals (at current rate)</h4>
-      <div style="display: grid; gap: 10px;">
-        <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 6px;">
-          <span>₹1,00,000</span>
-          <span style="font-weight: bold; color: #8b5cf6;">${yearsTo100k} years</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 6px;">
-          <span>₹5,00,000</span>
-          <span style="font-weight: bold; color: #8b5cf6;">${yearsTo500k} years</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 6px;">
-          <span>₹10,00,000</span>
-          <span style="font-weight: bold; color: #8b5cf6;">${yearsTo1m} years</span>
-        </div>
-      </div>
-    </div>
-    
-    <div style="background: #fef3c7; padding: 15px; border-radius: 8px;">
-      <h4 style="margin: 0 0 10px 0;">💡 How to Improve</h4>
-      <ul style="margin: 0; padding-left: 20px;">
-        <li style="margin-bottom: 8px;">Aim for 20% savings rate as a minimum</li>
-        <li style="margin-bottom: 8px;">Automate transfers to savings accounts</li>
-        <li style="margin-bottom: 8px;">Review subscriptions and reduce unnecessary expenses</li>
-        <li style="margin-bottom: 8px;">Increase income through side hustles or career growth</li>
-      </ul>
-    </div>
-  `;
-  
-  showModal('Savings Rate Calculator', html);
-}
-
-// ===== FEATURE #10: DATA BACKUP & RESTORE =====
-function backupAllData() {
-  if (!currentUser) return;
-  
-  const backup = {
-    version: '1.0',
-    timestamp: new Date().toISOString(),
-    user: currentUser.email,
-    currency: currency,
-    currentData: data,
-    goals: getUserGoals(),
-    recurring: getRecurringTransactions(),
-    months: {}
-  };
-  
-  const savedMonths = getSavedMonths();
-  savedMonths.forEach(monthKey => {
-    const storageKey = getUserStorageKey(monthKey);
-    const monthData = localStorage.getItem(storageKey);
-    if (monthData) {
-      backup.months[monthKey] = JSON.parse(monthData);
-    }
-  });
-  
-  const dataStr = JSON.stringify(backup, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `BudgetBackup_${currentUser.email}_${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-  
-  showToast('✅ Backup created successfully!', 'success');
-}
 
 // ===== DARK MODE =====
 function toggleDarkMode() {
@@ -1131,15 +25,11 @@ function toggleDarkMode() {
     text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   }
   
-  updateMobileAvatar();
-  
   showToast(isDark ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'success');
   
+  // Redraw charts with new theme
   if (trendsChart) {
     updateTrendsChart();
-  }
-  if (window.budgetComparisonChart) {
-    updateBudgetComparisonChart();
   }
 }
 
@@ -1180,54 +70,13 @@ function createUserAvatar(email) {
   const initials = email.substring(0, 2).toUpperCase();
   const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
   const colorIndex = email.charCodeAt(0) % colors.length;
-  const color = colors[colorIndex];
   
   const avatar = document.getElementById('userAvatar');
   if (avatar) {
     avatar.textContent = initials;
-    avatar.style.backgroundColor = color;
-  }
-  
-  const widgetAvatar = document.getElementById('userAvatarWidget');
-  if (widgetAvatar) {
-    widgetAvatar.textContent = initials;
-    widgetAvatar.style.backgroundColor = color;
+    avatar.style.backgroundColor = colors[colorIndex];
   }
 }
-
-// ===== USER MENU DROPDOWN FUNCTIONS =====
-function toggleUserMenu() {
-  const menu = document.getElementById('userDropdownMenu');
-  const btn = document.getElementById('widgetToggleBtn');
-  
-  if (menu && btn) {
-    menu.classList.toggle('show');
-    btn.classList.toggle('active');
-  }
-}
-
-function closeUserMenu() {
-  const menu = document.getElementById('userDropdownMenu');
-  const btn = document.getElementById('widgetToggleBtn');
-  
-  if (menu && btn) {
-    menu.classList.remove('show');
-    btn.classList.remove('active');
-  }
-}
-
-document.addEventListener('click', function(event) {
-  const menu = document.getElementById('userDropdownMenu');
-  const btn = document.getElementById('widgetToggleBtn');
-  
-  if (menu && btn) {
-    const isClickInside = menu.contains(event.target) || btn.contains(event.target);
-    
-    if (!isClickInside && menu.classList.contains('show')) {
-      closeUserMenu();
-    }
-  }
-});
 
 // ===== BUDGET GOALS =====
 function showGoalsModal() {
@@ -1332,6 +181,7 @@ function updateGoalsDisplay() {
   
   goalsSection.style.display = 'block';
   
+  // Update current amounts based on savings
   const totalSavings = calculateTotal('savings', 'actual');
   goals.forEach(goal => {
     goal.current = Math.min(totalSavings, goal.target);
@@ -1376,6 +226,7 @@ function updateTrendsChart() {
   
   canvas.style.display = 'block';
   
+  // Get last 6 months of data
   const monthsData = savedMonths.sort().slice(-6).map(monthKey => {
     const parts = monthKey.split('_');
     const year = parts[1];
@@ -1483,16 +334,19 @@ function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
+    // Title
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
     doc.text('Budget Report', 105, 20, { align: 'center' });
     
+    // User info
     doc.setFontSize(12);
     doc.setFont(undefined, 'normal');
     doc.text(`User: ${currentUser.email}`, 20, 35);
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 42);
     doc.text(`Period: ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}`, 20, 49);
     
+    // Summary
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.text('Financial Summary', 20, 60);
@@ -1521,6 +375,7 @@ function exportToPDF() {
     doc.setFont(undefined, 'bold');
     doc.text(`Balance: ${formatCurrency(balance)}`, 20, yPos);
     
+    // Income details
     yPos += 15;
     doc.setFontSize(14);
     doc.text('Income Details', 20, yPos);
@@ -1537,6 +392,7 @@ function exportToPDF() {
       yPos += 6;
     });
     
+    // Expenses details
     yPos += 10;
     if (yPos > 250) {
       doc.addPage();
@@ -1560,6 +416,7 @@ function exportToPDF() {
       }
     });
     
+    // Save PDF
     const monthName = document.getElementById('monthName').textContent;
     doc.save(`Budget_Report_${monthName}_${new Date().toISOString().split('T')[0]}.pdf`);
     
@@ -1571,6 +428,7 @@ function exportToPDF() {
 }
 
 // ===== USER MANAGEMENT =====
+
 function getUsers() {
   const users = localStorage.getItem('budget_users');
   return users ? JSON.parse(users) : {};
@@ -1603,20 +461,18 @@ function showDashboard() {
   document.getElementById('mainDashboard').style.display = 'block';
   document.getElementById('userEmailDisplay').textContent = currentUser.email;
   
+  // Create user avatar
   createUserAvatar(currentUser.email);
-  updateMobileAvatar();
+  
+  // Load dark mode preference
   loadDarkMode();
+  
+  // Load user's budget data
   loadMonthData();
-  initializeCategories();
   updateMonth();
   updateAll();
   updateTrendsChart();
   updateGoalsDisplay();
-  update503020Display();
-  updateSavingsRateDisplay();
-  updateBudgetComparisonChart();
-  
-  showMobileSection('dashboard');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1766,6 +622,7 @@ function hideMessages() {
 }
 
 // ===== DATA MANAGEMENT =====
+
 function getUserStorageKey(key) {
   return `user_${currentUser.email}_${key}`;
 }
@@ -1855,6 +712,7 @@ function saveData() {
   }
   
   localStorage.setItem(getUserStorageKey('currency'), currency);
+  showToast('💾 Saved successfully', 'success');
 }
 
 function getSavedMonths() {
@@ -2081,7 +939,6 @@ function clearAllData() {
   localStorage.removeItem(getUserStorageKey('savedMonthsList'));
   localStorage.removeItem(getUserStorageKey('currency'));
   localStorage.removeItem(getUserStorageKey('goals'));
-  localStorage.removeItem(getUserStorageKey('recurring'));
   
   showToast('All data cleared! Refreshing...', 'info');
   setTimeout(() => location.reload(), 1500);
@@ -2113,6 +970,7 @@ function closeModal() {
 }
 
 // ===== ITEM MANAGEMENT =====
+
 function addNewItem(category) {
   const itemName = prompt('Enter new item name:');
   if (itemName && itemName.trim() !== '') {
@@ -2120,9 +978,7 @@ function addNewItem(category) {
       name: itemName.trim(),
       planned: 0,
       actual: 0,
-      checked: false,
-      category: getCategoryForItem(itemName.trim(), category),
-      tags: []
+      checked: false
     };
     data[category].push(newItem);
     updateAll();
@@ -2155,6 +1011,7 @@ function setFilter(category, filter) {
 }
 
 // ===== CALCULATION & FORMATTING =====
+
 function formatCurrency(amount) {
   return currency + amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -2192,6 +1049,7 @@ function updateAll() {
   const totalDebt = calculateTotal('debt', 'actual');
   const leftAmount = totalIncome - totalExpenses - totalBills - totalSavings - totalDebt;
   
+  // Update summary cards
   const summaryIncome = document.getElementById('summaryIncome');
   const summaryExpenses = document.getElementById('summaryExpenses');
   const summaryBills = document.getElementById('summaryBills');
@@ -2204,6 +1062,7 @@ function updateAll() {
   if (summarySavings) summarySavings.textContent = formatCurrency(totalSavings);
   if (summaryDebt) summaryDebt.textContent = formatCurrency(totalDebt);
   
+  // Update financial overview
   const foIncomePlanned = document.getElementById('foIncomePlanned');
   const foIncomeActual = document.getElementById('foIncomeActual');
   const foExpensesPlanned = document.getElementById('foExpensesPlanned');
@@ -2242,9 +1101,6 @@ function updateAll() {
   
   updateTrendsChart();
   updateGoalsDisplay();
-  update503020Display();
-  updateSavingsRateDisplay();
-  updateBudgetComparisonChart();
   
   saveData();
 }
