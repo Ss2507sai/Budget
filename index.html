@@ -1,244 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
+<head>
     <meta charset="UTF-8">
-    <title>Untitled</title>
+    <title>Budget Dashboard</title>
     <link rel="stylesheet" href="./style.css">
-
-  </head>
-    
-  <body>
-  <div class="container">
-    <!-- Save indicator and Control buttons -->
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-      <div id="saveIndicator" style="display: none; background: #4ade80; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-        ✓ Saved!
-      </div>
-      <button onclick="clearAllData()" style="margin-top: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-        Clear All Data
-      </button>
-      <button onclick="viewPreviousMonths()" style="margin-top: 10px; background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-        📅 View Previous Months
-      </button>
-      <button onclick="viewYearlySummary()" style="margin-top: 10px; background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
-        📊 Yearly Summary
-      </button>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
     </div>
 
-    <div class="header">
-        <h1 id="monthName">October</h1>
-        <div class="subtitle">•BUDGET DASHBOARD•</div>
-    </div>
-    
-    <div class="top-controls">
-        <div class="control-group">
-            <label>BUDGET PERIOD</label>
-            <div class="date-inputs">
-                <input type="date" id="startDate" value="2025-10-01" onchange="updateMonth()">
-                <span>-</span>
-                <input type="date" id="endDate" value="2025-10-31" onchange="updateMonth()">
-            </div>
-        </div>
-        <div class="control-group">
-            <label>CURRENCY</label>
-            <select id="currency" onchange="updateAll()">
-                <option value="₹">₹ (INR)</option>
-                <option value="$">$ (USD)</option>
-                <option value="€">€ (EUR)</option>
-                <option value="£">£ (GBP)</option>
-                <option value="¥">¥ (JPY)</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="summary-cards">
-        <div class="summary-card">
-            <div class="label">INCOME</div>
-            <div class="amount" id="summaryIncome">₹10,600.00</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">EXPENSES</div>
-            <div class="amount" id="summaryExpenses">₹0.00</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">BILLS</div>
-            <div class="amount" id="summaryBills">₹2,828.50</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">SAVINGS</div>
-            <div class="amount" id="summarySavings">₹4,570.00</div>
-        </div>
-        <div class="summary-card">
-            <div class="label">DEBT</div>
-            <div class="amount" id="summaryDebt">₹855.00</div>
-        </div>
-    </div>
-    
-    <div class="dashboard-row">
-        <div class="dashboard-card">
-            <h3>FINANCIAL OVERVIEW</h3>
-            <div class="financial-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>PLANNED</th>
-                            <th>ACTUAL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>• Rollover</td>
-                            <td>-</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td>• Income</td>
-                            <td id="foIncomePlanned">₹10,600.00</td>
-                            <td id="foIncomeActual">₹10,600.00</td>
-                        </tr>
-                        <tr>
-                            <td>- Expenses</td>
-                            <td id="foExpensesPlanned">₹0.00</td>
-                            <td id="foExpensesActual">₹0.00</td>
-                        </tr>
-                        <tr>
-                            <td>- Bills</td>
-                            <td id="foBillsPlanned">₹2,828.50</td>
-                            <td id="foBillsActual">₹2,828.50</td>
-                        </tr>
-                        <tr>
-                            <td>- Savings</td>
-                            <td id="foSavingsPlanned">₹4,570.00</td>
-                            <td id="foSavingsActual">₹4,570.00</td>
-                        </tr>
-                        <tr>
-                            <td>- Debt</td>
-                            <td id="foDebtPlanned">₹855.00</td>
-                            <td id="foDebtActual">₹855.00</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>LEFT</td>
-                            <td id="foLeftPlanned">₹0.00</td>
-                            <td id="foLeftActual">₹0.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="dashboard-card white">
-            <h3>AMOUNT LEFT TO SPEND</h3>
-            <div class="amount-left">
-                <div class="big-amount" id="amountLeft">₹0.00</div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card white">
-            <h3>CASH FLOW</h3>
-            <div class="cash-flow-chart" id="cashFlow">
+    <!-- Login/Signup Screen -->
+    <div id="authScreen" class="auth-screen" style="display: none;">
+        <div class="auth-box">
+            <h1 id="authTitle">Login</h1>
+            <div class="subtitle">•BUDGET DASHBOARD•</div>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" id="authSubmitBtn">Login</button>
+            </form>
+
+            <div class="toggle-text">
+                <span id="toggleText">Don't have an account?</span>
+                <a href="#" id="toggleAuth">Sign Up</a>
             </div>
         </div>
     </div>
 
-    <!-- PIE CHART SECTION -->
-    <div class="dashboard-card white" style="margin-bottom: 25px; padding: 30px;">
-        <h3>BUDGET BREAKDOWN - PIE CHART</h3>
-        <div id="pieChart"></div>
-    </div>
-    
-    <div class="category-tables">
-        <div class="category-card">
-            <h3>INCOME</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>PLANNED</th>
-                        <th>ACTUAL</th>
-                    </tr>
-                </thead>
-                <tbody id="incomeTable">
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="category-card">
-            <h3>BILLS</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>PLANNED</th>
-                        <th>ACTUAL</th>
-                        <th>PROGRESS</th>
-                    </tr>
-                </thead>
-                <tbody id="billsTable">
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <div class="category-tables">
-        <div class="category-card">
-            <h3>EXPENSES</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>PLANNED</th>
-                        <th>ACTUAL</th>
-                        <th>PROGRESS</th>
-                    </tr>
-                </thead>
-                <tbody id="expensesTable">
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="category-card">
-            <h3>SAVINGS</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>PLANNED</th>
-                        <th>ACTUAL</th>
-                        <th>PROGRESS</th>
-                    </tr>
-                </thead>
-                <tbody id="savingsTable">
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <div class="category-tables">
-        <div class="category-card">
-            <h3>DEBT</h3>
-            <table class="category-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>PLANNED</th>
-                        <th>ACTUAL</th>
-                        <th>PROGRESS</th>
-                    </tr>
-                </thead>
-                <tbody id="debtTable">
-                </tbody>
-            </table>
-        </div>
-        <div></div>
-    </div>
-</div>
+    <!-- Main Dashboard (hidden until logged in) -->
+    <div id="mainDashboard" style="display: none;">
+        <div class="container">
+            <!-- User Info & Control buttons -->
+            <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+                <div class="user-info-card">
+                    <p style="margin: 0 0 5px 0; font-size: 11px; color: #666;">Logged in as:</p>
+                    <p style="margin: 0 0 10px 0; font-weight: 600; font-size: 13px; color: #333;" id="userEmailDisplay"></p>
+                    <button onclick="handleLogout()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; margin-bottom: 10px;">
+                        Logout
+                    </button>
+                </div>
+                <div id="saveIndicator" style="display: none; background: #4ade80; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-bottom: 10px;">
+                    ✓ Saved!
+                </div>
+                <button onclick="clearAllData()" style="margin-bottom: 10px; background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    Clear All Data
+                </button>
+                <button onclick="viewPreviousMonths()" style="margin-bottom: 10px; background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    📅 View Previous Months
+                </button>
+                <button onclick="viewYearlySummary()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%;">
+                    📊 Yearly Summary
+                </button>
+            </div>
 
-<link rel="stylesheet" href="style.css">
-<script src="script.js"></script>
-    <script  src="./script.js"></script>
+            <div class="header">
+                <h1 id="monthName">October</h1>
+                <div class="subtitle">•BUDGET DASHBOARD•</div>
+            </div>
+            
+            <div class="top-controls">
+                <div class="control-group">
+                    <label>BUDGET PERIOD</label>
+                    <div class="date-inputs">
+                        <input type="date" id="startDate" value="2025-10-01" onchange="updateMonth()">
+                        <span>-</span>
+                        <input type="date" id="endDate" value="2025-10-31" onchange="updateMonth()">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>CURRENCY</label>
+                    <select id="currency" onchange="updateAll()">
+                        <option value="₹">₹ (INR)</option>
+                        <option value="$">$ (USD)</option>
+                        <option value="€">€ (EUR)</option>
+                        <option value="£">£ (GBP)</option>
+                        <option value="¥">¥ (JPY)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="label">INCOME</div>
+                    <div class="amount" id="summaryIncome">₹10,600.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">EXPENSES</div>
+                    <div class="amount" id="summaryExpenses">₹0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">BILLS</div>
+                    <div class="amount" id="summaryBills">₹2,828.50</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">SAVINGS</div>
+                    <div class="amount" id="summarySavings">₹4,570.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">DEBT</div>
+                    <div class="amount" id="summaryDebt">₹855.00</div>
+                </div>
+            </div>
+            
+            <div class="dashboard-row">
+                <div class="dashboard-card">
+                    <h3>FINANCIAL OVERVIEW</h3>
+                    <div class="financial-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>PLANNED</th>
+                                    <th>ACTUAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>• Rollover</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>• Income</td>
+                                    <td id="foIncomePlanned">₹10,600.00</td>
+                                    <td id="foIncomeActual">₹10,600.00</td>
+                                </tr>
+                                <tr>
+                                    <td>- Expenses</td>
+                                    <td id="foExpensesPlanned">₹0.00</td>
+                                    <td id="foExpensesActual">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>- Bills</td>
+                                    <td id="foBillsPlanned">₹2,828.50</td>
+                                    <td id="foBillsActual">₹2,828.50</td>
+                                </tr>
+                                <tr>
+                                    <td>- Savings</td>
+                                    <td id="foSavingsPlanned">₹4,570.00</td>
+                                    <td id="foSavingsActual">₹4,570.00</td>
+                                </tr>
+                                <tr>
+                                    <td>- Debt</td>
+                                    <td id="foDebtPlanned">₹855.00</td>
+                                    <td id="foDebtActual">₹855.00</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td>LEFT</td>
+                                    <td id="foLeftPlanned">₹0.00</td>
+                                    <td id="foLeftActual">₹0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card white">
+                    <h3>AMOUNT LEFT TO SPEND</h3>
+                    <div class="amount-left">
+                        <div class="big-amount" id="amountLeft">₹0.00</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card white">
+                    <h3>CASH FLOW</h3>
+                    <div class="cash-flow-chart" id="cashFlow">
+                    </div>
+                </div>
+            </div>
 
-  </body>
-  
+            <!-- PIE CHART SECTION -->
+            <div class="dashboard-card white" style="margin-bottom: 25px; padding: 30px;">
+                <h3>BUDGET BREAKDOWN - PIE CHART</h3>
+                <div id="pieChart"></div>
+            </div>
+            
+            <div class="category-tables">
+                <div class="category-card">
+                    <h3>INCOME</h3>
+                    <table class="category-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incomeTable">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-card">
+                    <h3>BILLS</h3>
+                    <table class="category-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                                <th>PROGRESS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="category-tables">
+                <div class="category-card">
+                    <h3>EXPENSES</h3>
+                    <table class="category-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                                <th>PROGRESS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesTable">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="category-card">
+                    <h3>SAVINGS</h3>
+                    <table class="category-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                                <th>PROGRESS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="savingsTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="category-tables">
+                <div class="category-card">
+                    <h3>DEBT</h3>
+                    <table class="category-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>PLANNED</th>
+                                <th>ACTUAL</th>
+                                <th>PROGRESS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debtTable">
+                        </tbody>
+                    </table>
+                </div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
 </html>
