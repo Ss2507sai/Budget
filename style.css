@@ -9,6 +9,7 @@ body {
     background: linear-gradient(135deg, #f5f0ff 0%, #ffe5f0 100%);
     padding: 20px;
     min-height: 100vh;
+    transition: background 0.3s ease;
 }
 
 /* ===== LOADING SCREEN ===== */
@@ -146,6 +147,52 @@ body {
     text-decoration: underline;
 }
 
+/* ===== TOAST NOTIFICATIONS ===== */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    pointer-events: all;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    border-left: 4px solid #10b981;
+    color: #10b981;
+}
+
+.toast-error {
+    border-left: 4px solid #ef4444;
+    color: #ef4444;
+}
+
+.toast-info {
+    border-left: 4px solid #3b82f6;
+    color: #3b82f6;
+}
+
 /* ===== USER INFO CARD ===== */
 .user-info-card {
     background: white;
@@ -153,6 +200,61 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 10px;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ===== USER AVATAR ===== */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+/* ===== DARK MODE BUTTON ===== */
+.btn-dark-mode {
+    width: 100%;
+    padding: 8px 16px;
+    background: #374151;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.3s;
+}
+
+.btn-dark-mode:hover {
+    background: #1f2937;
+}
+
+/* ===== GOALS SECTION ===== */
+.goals-section {
+    background: #f8f5ff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    transition: background 0.3s ease;
+}
+
+.goals-section h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    transition: color 0.3s ease;
 }
 
 /* ===== DASHBOARD STYLES ===== */
@@ -163,6 +265,7 @@ body {
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .header {
@@ -175,12 +278,14 @@ body {
     font-weight: 700;
     color: #333;
     margin-bottom: 5px;
+    transition: color 0.3s ease;
 }
 
 .header .subtitle {
     color: #666;
     font-size: 14px;
     letter-spacing: 2px;
+    transition: color 0.3s ease;
 }
 
 .top-controls {
@@ -191,6 +296,7 @@ body {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
+    transition: background 0.3s ease;
 }
 
 .control-group {
@@ -204,6 +310,7 @@ body {
     font-size: 12px;
     color: #333;
     letter-spacing: 1px;
+    transition: color 0.3s ease;
 }
 
 .date-inputs {
@@ -218,6 +325,7 @@ body {
     border: 2px solid #e0d4f7;
     border-radius: 6px;
     font-size: 14px;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .control-group select {
@@ -226,6 +334,7 @@ body {
     border-radius: 6px;
     font-size: 14px;
     background: white;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .summary-cards {
@@ -240,6 +349,13 @@ body {
     padding: 20px;
     border-radius: 8px;
     text-align: center;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
 }
 
 .summary-card .label {
@@ -248,12 +364,14 @@ body {
     color: #555;
     letter-spacing: 1px;
     margin-bottom: 8px;
+    transition: color 0.3s ease;
 }
 
 .summary-card .amount {
     font-size: 24px;
     font-weight: 700;
     color: #333;
+    transition: color 0.3s ease;
 }
 
 .dashboard-row {
@@ -267,11 +385,13 @@ body {
     background: #f8f5ff;
     padding: 20px;
     border-radius: 8px;
+    transition: background 0.3s ease;
 }
 
 .dashboard-card.white {
     background: white;
     border: 2px solid #e9d5ff;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .dashboard-card h3 {
@@ -281,6 +401,7 @@ body {
     color: #333;
     letter-spacing: 1px;
     margin-bottom: 15px;
+    transition: color 0.3s ease;
 }
 
 .financial-table {
@@ -297,11 +418,13 @@ body {
     font-weight: 700;
     padding: 6px 8px;
     font-size: 11px;
+    transition: color 0.3s ease;
 }
 
 .financial-table td {
     padding: 6px 8px;
     text-align: right;
+    transition: color 0.3s ease;
 }
 
 .financial-table td:first-child {
@@ -326,6 +449,7 @@ body {
     font-weight: 700;
     color: #333;
     margin-top: 10px;
+    transition: color 0.3s ease;
 }
 
 .cash-flow-chart {
@@ -345,6 +469,7 @@ body {
     justify-content: space-between;
     font-size: 11px;
     color: #555;
+    transition: color 0.3s ease;
 }
 
 .chart-bars {
@@ -355,6 +480,7 @@ body {
 
 .chart-bar {
     border-radius: 4px;
+    transition: width 0.3s ease;
 }
 
 .chart-bar.planned {
@@ -376,6 +502,7 @@ body {
     background: #f8f5ff;
     padding: 20px;
     border-radius: 8px;
+    transition: background 0.3s ease;
 }
 
 .category-card h3 {
@@ -385,6 +512,7 @@ body {
     color: #333;
     letter-spacing: 1px;
     margin-bottom: 15px;
+    transition: color 0.3s ease;
 }
 
 .category-table {
@@ -398,11 +526,13 @@ body {
     padding: 8px 4px;
     font-size: 11px;
     border-bottom: 2px solid #c4b5fd;
+    transition: color 0.3s ease;
 }
 
 .category-table tbody td {
     padding: 6px 4px;
     text-align: center;
+    transition: color 0.3s ease;
 }
 
 .category-table tbody td:first-child {
@@ -416,6 +546,7 @@ body {
     border-radius: 4px;
     text-align: center;
     font-size: 12px;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .category-table input[type="checkbox"] {
@@ -437,12 +568,171 @@ body {
 
 .item-row span {
     font-size: 12px;
+    transition: color 0.3s ease;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+/* ===== DARK MODE STYLES ===== */
+body.dark-mode {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+body.dark-mode .container,
+body.dark-mode .auth-box {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+body.dark-mode .header h1 {
+    color: #e5e7eb;
+}
+
+body.dark-mode .header .subtitle {
+    color: #9ca3af;
+}
+
+body.dark-mode .category-card h3,
+body.dark-mode .dashboard-card h3 {
+    color: #e5e7eb;
+}
+
+body.dark-mode .summary-card {
+    background: #374151;
+}
+
+body.dark-mode .summary-card .label {
+    color: #9ca3af;
+}
+
+body.dark-mode .summary-card .amount {
+    color: #e5e7eb;
+}
+
+body.dark-mode .dashboard-card {
+    background: #374151;
+}
+
+body.dark-mode .dashboard-card.white {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+body.dark-mode .category-card {
+    background: #374151;
+}
+
+body.dark-mode .top-controls {
+    background: #374151;
+}
+
+body.dark-mode .control-group label {
+    color: #e5e7eb;
+}
+
+body.dark-mode .date-inputs input,
+body.dark-mode .control-group select {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+body.dark-mode .category-table input[type="number"] {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+body.dark-mode .financial-table td,
+body.dark-mode .financial-table th,
+body.dark-mode .category-table td,
+body.dark-mode .category-table th {
+    color: #e5e7eb;
+}
+
+body.dark-mode .goals-section {
+    background: #374151;
+}
+
+body.dark-mode .goals-section h3 {
+    color: #e5e7eb;
+}
+
+body.dark-mode .user-info-card {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+body.dark-mode .chart-label {
+    color: #9ca3af;
+}
+
+body.dark-mode .amount-left .big-amount {
+    color: #e5e7eb;
+}
+
+body.dark-mode .item-row span {
+    color: #e5e7eb;
+}
+
+body.dark-mode .form-group label {
+    color: #e5e7eb;
+}
+
+body.dark-mode .form-group input {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+body.dark-mode .toggle-text {
+    color: #9ca3af;
+}
+
+body.dark-mode .toast {
+    background: #374151;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.dashboard-card {
+    animation: fadeIn 0.4s ease;
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS ===== */
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
+
     .summary-cards {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
     
     .dashboard-row {
@@ -456,4 +746,188 @@ body {
     .top-controls {
         grid-template-columns: 1fr;
     }
+    
+    .toast-container {
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .amount-left .big-amount {
+        font-size: 36px;
+    }
+
+    .auth-box {
+        padding: 30px 20px;
+    }
+
+    .category-table {
+        font-size: 11px;
+    }
+
+    .category-table input[type="number"] {
+        font-size: 11px;
+        padding: 3px;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .user-info-card,
+    .btn-dark-mode,
+    button {
+        display: none !important;
+    }
+
+    .container {
+        box-shadow: none;
+    }
+
+    .summary-card {
+        page-break-inside: avoid;
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+*:focus {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+}
+
+button:focus,
+input:focus,
+select:focus {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #8b5cf6;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* ===== LOADING STATE ===== */
+.loading-screen {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ===== SMOOTH TRANSITIONS ===== */
+* {
+    transition-property: background-color, color, border-color;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+}
+
+/* ===== HOVER EFFECTS ===== */
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.category-table input[type="checkbox"]:hover {
+    transform: scale(1.1);
+}
+
+/* ===== MODAL DARK MODE SUPPORT ===== */
+body.dark-mode #customModal > div {
+    background: #1f2937 !important;
+    color: #e5e7eb !important;
+}
+
+body.dark-mode #customModal h2,
+body.dark-mode #customModal h3,
+body.dark-mode #customModal h4,
+body.dark-mode #customModal p,
+body.dark-mode #customModal div {
+    color: #e5e7eb !important;
+}
+
+/* ===== CHART CONTAINER ===== */
+#trendsChart {
+    max-height: 300px;
+    transition: opacity 0.3s ease;
+}
+
+#pieChart {
+    animation: fadeIn 0.5s ease;
+}
+
+/* ===== SUCCESS/ERROR STATES ===== */
+.success-indicator {
+    color: #10b981;
+    font-weight: bold;
+}
+
+.error-indicator {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.warning-indicator {
+    color: #f59e0b;
+    font-weight: bold;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-center {
+    text-align: center;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ===== FINAL POLISH ===== */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
